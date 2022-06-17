@@ -3,9 +3,9 @@ from typing import Generator
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.utils import create_event_by_db, update_event_by_db
+from tests.utils import create_tournament_by_db, update_tournament_by_db
 
-NAMESPACE = "/internal/event/"
+NAMESPACE = "/internal/tournament/"
 
 
 @pytest.mark.parametrize(
@@ -15,10 +15,10 @@ NAMESPACE = "/internal/event/"
         "http_code",
         "message",
     ),
-    ((1, "Lyon e-Sport 2022", 200, ""),),
+    ((1, "Pro", 200, ""),),
 )
 @pytest.mark.anyio
-def test_post_event(
+def test_post_tournament(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -48,16 +48,16 @@ def test_post_event(
     (
         (
             1,
-            "Lyon e-Sport 2022",
+            "Pro",
             200,
         ),
     ),
 )
 @pytest.mark.anyio
-def test_get_events(
+def test_get_tournaments(
     client: TestClient, event_loop: Generator, id: int, name: str, http_code: int
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_tournament_by_db(name))
 
     response = client.get(f"{NAMESPACE}")
 
@@ -75,12 +75,12 @@ def test_get_events(
         "message",
     ),
     (
-        (1, "Lyon e-Sport 2022", 200, ""),
-        (0, "Lyon e-Sport 2022", 404, "Event 0 not found"),
+        (1, "Pro", 200, ""),
+        (0, "Pro", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_get_event(
+def test_get_tournament(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -88,7 +88,7 @@ def test_get_event(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_tournament_by_db(name))
 
     response = client.get(f"{NAMESPACE}{id}")
 
@@ -109,12 +109,12 @@ def test_get_event(
         "message",
     ),
     (
-        (1, "Lyon e-Sport 2022", 200, "Deleted Event 1"),
-        (0, "Lyon e-Sport 2022", 404, "Event 0 not found"),
+        (1, "Pro", 200, "Deleted Tournament 1"),
+        (0, "Pro", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_delete_event(
+def test_delete_tournament(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -122,7 +122,7 @@ def test_delete_event(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_tournament_by_db(name))
 
     response = client.delete(f"{NAMESPACE}{id}")
 
@@ -142,12 +142,12 @@ def test_delete_event(
         "message",
     ),
     (
-        (1, "LAN Party", 200, ""),
-        (0, "LAN Party", 404, "Event 0 not found"),
+        (1, "Elite", 200, ""),
+        (0, "Elite", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_put_events(
+def test_put_tournaments(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -155,8 +155,8 @@ def test_put_events(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
-    event_loop.run_until_complete(update_event_by_db(id, name))
+    event_loop.run_until_complete(create_tournament_by_db(name))
+    event_loop.run_until_complete(update_tournament_by_db(id, name))
 
     response = client.put(f"{NAMESPACE}{id}", json={"name": name})
 

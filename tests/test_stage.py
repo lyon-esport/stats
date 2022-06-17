@@ -3,9 +3,9 @@ from typing import Generator
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.utils import create_event_by_db, update_event_by_db
+from tests.utils import create_stage_by_db, update_stage_by_db
 
-NAMESPACE = "/internal/event/"
+NAMESPACE = "/internal/stage/"
 
 
 @pytest.mark.parametrize(
@@ -15,10 +15,10 @@ NAMESPACE = "/internal/event/"
         "http_code",
         "message",
     ),
-    ((1, "Lyon e-Sport 2022", 200, ""),),
+    ((1, "Bracket", 200, ""),),
 )
 @pytest.mark.anyio
-def test_post_event(
+def test_post_stage(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -48,16 +48,16 @@ def test_post_event(
     (
         (
             1,
-            "Lyon e-Sport 2022",
+            "Bracket",
             200,
         ),
     ),
 )
 @pytest.mark.anyio
-def test_get_events(
+def test_get_stages(
     client: TestClient, event_loop: Generator, id: int, name: str, http_code: int
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_stage_by_db(name))
 
     response = client.get(f"{NAMESPACE}")
 
@@ -75,12 +75,12 @@ def test_get_events(
         "message",
     ),
     (
-        (1, "Lyon e-Sport 2022", 200, ""),
-        (0, "Lyon e-Sport 2022", 404, "Event 0 not found"),
+        (1, "Bracket", 200, ""),
+        (0, "Bracket", 404, "Stage 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_get_event(
+def test_get_stage(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -88,7 +88,7 @@ def test_get_event(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_stage_by_db(name))
 
     response = client.get(f"{NAMESPACE}{id}")
 
@@ -109,12 +109,12 @@ def test_get_event(
         "message",
     ),
     (
-        (1, "Lyon e-Sport 2022", 200, "Deleted Event 1"),
-        (0, "Lyon e-Sport 2022", 404, "Event 0 not found"),
+        (1, "Bracket", 200, "Deleted Stage 1"),
+        (0, "Bracket", 404, "Stage 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_delete_event(
+def test_delete_stage(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -122,7 +122,7 @@ def test_delete_event(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
+    event_loop.run_until_complete(create_stage_by_db(name))
 
     response = client.delete(f"{NAMESPACE}{id}")
 
@@ -142,12 +142,12 @@ def test_delete_event(
         "message",
     ),
     (
-        (1, "LAN Party", 200, ""),
-        (0, "LAN Party", 404, "Event 0 not found"),
+        (1, "Free for all", 200, ""),
+        (0, "Free for all", 404, "Stage 0 not found"),
     ),
 )
 @pytest.mark.anyio
-def test_put_events(
+def test_put_stages(
     client: TestClient,
     event_loop: Generator,
     id: int,
@@ -155,8 +155,8 @@ def test_put_events(
     http_code: int,
     message: str,
 ):
-    event_loop.run_until_complete(create_event_by_db(name))
-    event_loop.run_until_complete(update_event_by_db(id, name))
+    event_loop.run_until_complete(create_stage_by_db(name))
+    event_loop.run_until_complete(update_stage_by_db(id, name))
 
     response = client.put(f"{NAMESPACE}{id}", json={"name": name})
 
