@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "les-stats"
+version = "0"
+description = "Tournament statistics"
+authors = ["Ludovic Ortega <ludovic.ortega@lyon-esport.fr>"]
+license = "CeCILL"
+readme = "README.md"
+homepage = "https://github.com/lyon-esport/stats"
+repository = "https://github.com/lyon-esport/stats"
+keywords = ["lol", "esport", "statistics"]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)",
+    "Topic :: Utilities",
+]
+include = [
+    "LICENSE",
+    "LICENSE.fr",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.78.0"
+httpx = "^0.23.0"
+uvicorn = {extras = ["standard"], version = "^0.17.6"}
+sentry-sdk = "^1.5.12"
+prometheus-fastapi-instrumentator = "^5.8.2"
+tortoise-orm = "0.18.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.2"
+pre-commit = "^2.19.0"
+fastapi = {extras = ["all"], version = "^0.78.0"}
+anyio = "^3.6.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
