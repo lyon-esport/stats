@@ -12,9 +12,8 @@ from tortoise.contrib.fastapi import register_tortoise
 from les_stats.config import settings
 from les_stats.routers.api import api_router
 
-TITLE = "Lyon e-Sport stats"
-MODULE_NAME = __name__.split(".")[0]
-VERSION = importlib.metadata.version(MODULE_NAME)
+TITLE = "Lyon e-Sport stats API"
+VERSION = importlib.metadata.version("les_stats")
 
 
 def create_app() -> FastAPI:
@@ -52,16 +51,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/docs", include_in_schema=False)
-async def swagger_ui_html():
-    return get_swagger_ui_html(
-        title=TITLE,
-        openapi_url="/openapi.json",
-        swagger_favicon_url="/static/favicon.ico"
-    )
-
-
 if settings.SENTRY_DSN:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
@@ -70,14 +59,22 @@ if settings.SENTRY_DSN:
     )
     app.add_middleware(SentryAsgiMiddleware)
 
-models = [f"{MODULE_NAME}.models"]
-
 register_tortoise(
     app,
     db_url=settings.DB_URL,
-    modules={"models": models},
+    modules={"models": ["les_stats.models"]},
     generate_schemas=True,
 )
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui_html():
+    return get_swagger_ui_html(
+        title=TITLE,
+        openapi_url="/openapi.json",
+        swagger_favicon_url="/static/favicon.ico",
+        swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    )
 
 
 @app.on_event("startup")

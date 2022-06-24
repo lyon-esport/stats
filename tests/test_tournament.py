@@ -10,18 +10,16 @@ NAMESPACE = "/internal/tournament/"
 
 @pytest.mark.parametrize(
     (
-        "id",
         "name",
         "http_code",
         "message",
     ),
-    ((1, "Pro", 200, ""),),
+    (("Pro", 200, ""),),
 )
 @pytest.mark.anyio
 def test_post_tournament(
     client: TestClient,
     event_loop: Generator,
-    id: int,
     name: str,
     http_code: int,
     message: str,
@@ -35,19 +33,16 @@ def test_post_tournament(
 
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == id
     assert data["name"] == name
 
 
 @pytest.mark.parametrize(
     (
-        "id",
         "name",
         "http_code",
     ),
     (
         (
-            1,
             "Pro",
             200,
         ),
@@ -55,7 +50,7 @@ def test_post_tournament(
 )
 @pytest.mark.anyio
 def test_get_tournaments(
-    client: TestClient, event_loop: Generator, id: int, name: str, http_code: int
+    client: TestClient, event_loop: Generator, name: str, http_code: int
 ):
     event_loop.run_until_complete(create_tournament_by_db(name))
 
@@ -63,39 +58,35 @@ def test_get_tournaments(
 
     assert response.status_code == http_code
     data = response.json()
-    assert data[id - 1]["id"] == id
     assert data[id - 1]["name"] == name
 
 
 @pytest.mark.parametrize(
     (
-        "id",
         "name",
         "http_code",
         "message",
     ),
     (
-        (1, "Pro", 200, ""),
-        (0, "Pro", 404, "Tournament 0 not found"),
+        ("Pro", 200, ""),
+        ("Pro", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
 def test_get_tournament(
     client: TestClient,
     event_loop: Generator,
-    id: int,
     name: str,
     http_code: int,
     message: str,
 ):
     event_loop.run_until_complete(create_tournament_by_db(name))
 
-    response = client.get(f"{NAMESPACE}{id}")
+    response = client.get(f"{NAMESPACE}{name}")
 
     assert response.status_code == http_code
     data = response.json()
     if http_code == 200:
-        assert data["id"] == id
         assert data["name"] == name
     elif http_code == 404:
         assert data["detail"] == message
@@ -103,28 +94,26 @@ def test_get_tournament(
 
 @pytest.mark.parametrize(
     (
-        "id",
         "name",
         "http_code",
         "message",
     ),
     (
-        (1, "Pro", 200, "Deleted Tournament 1"),
-        (0, "Pro", 404, "Tournament 0 not found"),
+        ("Pro", 200, "Deleted Tournament 1"),
+        ("Pro", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
 def test_delete_tournament(
     client: TestClient,
     event_loop: Generator,
-    id: int,
     name: str,
     http_code: int,
     message: str,
 ):
     event_loop.run_until_complete(create_tournament_by_db(name))
 
-    response = client.delete(f"{NAMESPACE}{id}")
+    response = client.delete(f"{NAMESPACE}{name}")
 
     assert response.status_code == http_code
     data = response.json()
@@ -136,34 +125,31 @@ def test_delete_tournament(
 
 @pytest.mark.parametrize(
     (
-        "id",
         "name",
         "http_code",
         "message",
     ),
     (
-        (1, "Elite", 200, ""),
-        (0, "Elite", 404, "Tournament 0 not found"),
+        ("Elite", 200, ""),
+        ("Elite", 404, "Tournament 0 not found"),
     ),
 )
 @pytest.mark.anyio
 def test_put_tournaments(
     client: TestClient,
     event_loop: Generator,
-    id: int,
     name: str,
     http_code: int,
     message: str,
 ):
     event_loop.run_until_complete(create_tournament_by_db(name))
-    event_loop.run_until_complete(update_tournament_by_db(id, name))
+    event_loop.run_until_complete(update_tournament_by_db(name))
 
-    response = client.put(f"{NAMESPACE}{id}", json={"name": name})
+    response = client.put(f"{NAMESPACE}{name}", json={"name": name})
 
     assert response.status_code == http_code
     data = response.json()
     if http_code == 200:
-        assert data["id"] == id
         assert data["name"] == name
     elif http_code == 404:
         assert data["detail"] == message
