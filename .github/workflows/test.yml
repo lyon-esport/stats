@@ -32,4 +32,4 @@ jobs:
         run: |
           export PATH="$PATH:$HOME/.local/bin"
           source `poetry env info --path`/bin/activate
-          pytest
+          poetry run pytest
