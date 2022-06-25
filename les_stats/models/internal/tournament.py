@@ -1,4 +1,5 @@
 from tortoise import fields, models
+
 from les_stats.models.internal.event import Event
 
 

@@ -13,14 +13,19 @@ router = APIRouter()
 
 @router.post("/", response_model=None)
 async def add_stage(stage: Stage_Pydantic):
-    stage_obj = await Stage.create(**stage.dict(exclude_unset=True))
-    return await Stage_Pydantic.from_tortoise_orm(stage_obj)
+    if not await Stage.exists(name=stage.name):
+        stage_obj = await Stage.create(**stage.dict(exclude_unset=True))
+        return Stage_Pydantic.parse_obj(stage_obj)
+    else:
+        raise HTTPException(status_code=409, detail=f"Event {stage.name} already exist")
 
 
 @router.delete(
-    "/{stage_name}", response_model=Status, responses={404: {"model": HTTPNotFoundError}}
+    "/{stage_name}",
+    response_model=Status,
+    responses={404: {"model": HTTPNotFoundError}},
 )
-async def delete_stage(stage_name: int):
+async def delete_stage(stage_name: str):
     deleted_count = await Stage.filter(name=stage_name).delete()
     if not deleted_count:
         raise HTTPException(status_code=404, detail=f"Stage {stage_name} not found")
@@ -34,11 +39,12 @@ async def delete_stage(stage_name: int):
 )
 async def get_stage(stage_name: str):
     try:
-        return await Stage_Pydantic.from_queryset_single(Stage.get(name=stage_name))
+        return Stage_Pydantic.parse_obj(await Stage.get(name=stage_name))
     except DoesNotExist:
         raise HTTPException(status_code=404, detail=f"Stage {stage_name} not found")
 
 
 @router.get("/", response_model=List[Stage_Pydantic])
 async def get_stages():
-    return await Stage_Pydantic.from_queryset(Stage.all())
+    stages_obj = await Stage.all()
+    return [Stage_Pydantic.parse_obj(stage_obj) for stage_obj in stages_obj]

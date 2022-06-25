@@ -3,27 +3,56 @@ from typing import List
 from fastapi import APIRouter, HTTPException
 from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
+from tortoise.transactions import in_transaction
 
+from les_stats.models.internal.stage import Stage
 from les_stats.models.internal.tournament import Tournament
-from les_stats.schemas.internal.tournament import Tournament_Pydantic, TournamentIn_Pydantic
+from les_stats.schemas.internal.tournament import (
+    Tournament_Pydantic,
+    TournamentIn_Pydantic,
+)
 from les_stats.utils.status import Status
 
 router = APIRouter()
 
 
-@router.post("/", response_model=None)
+@router.post(
+    "/",
+    response_model=Tournament_Pydantic,
+    responses={409: {"model": HTTPNotFoundError}},
+)
 async def add_tournament(tournament: Tournament_Pydantic):
-    tournament_obj = await Tournament.create(**tournament.dict(exclude_unset=True))
-    return await Tournament_Pydantic.from_tortoise_orm(tournament_obj)
+    async with in_transaction("default") as connection:
+        if not await Tournament.exists(name=tournament.name):
+            tournament_obj = Tournament(
+                **tournament.dict(exclude={"stages"}, exclude_unset=True)
+            )
+            await tournament_obj.save(using_db=connection)
+            if tournament.stages:
+                for stage in tournament.stages:
+                    stage_obj, _ = await Stage.get_or_create(
+                        **stage.dict(exclude_unset=True), using_db=connection
+                    )
+                    await tournament_obj.stages.add(stage_obj)
+
+            return Tournament_Pydantic.parse_obj(tournament_obj)
+        else:
+            raise HTTPException(
+                status_code=409, detail=f"Tournament {tournament.name} already exist"
+            )
 
 
 @router.delete(
-    "/{tournament_name}", response_model=Status, responses={404: {"model": HTTPNotFoundError}}
+    "/{tournament_name}",
+    response_model=Status,
+    responses={404: {"model": HTTPNotFoundError}},
 )
 async def delete_tournament(tournament_name: str):
     deleted_count = await Tournament.filter(name=tournament_name).delete()
     if not deleted_count:
-        raise HTTPException(status_code=404, detail=f"Tournament {tournament_name} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Tournament {tournament_name} not found"
+        )
     return Status(message=f"Deleted Tournament {tournament_name}")
 
 
@@ -34,12 +63,23 @@ async def delete_tournament(tournament_name: str):
 )
 async def update_tournament(tournament_name: str, tournament: TournamentIn_Pydantic):
     try:
-        await Tournament_Pydantic.from_queryset_single(Tournament.get(name=tournament_name))
+        Tournament_Pydantic.parse_obj(await Tournament.get(name=tournament_name))
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Tournament {tournament_name} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Tournament {tournament_name} not found"
+        )
 
-    await Tournament.filter(name=tournament_name).update(**tournament.dict(exclude_unset=True))
-    return await Tournament_Pydantic.from_queryset_single(Tournament.get(name=tournament_name))
+    async with in_transaction("default") as connection:
+        tournament_obj = await Tournament.get(name=tournament_name)
+        await tournament_obj.stages.clear(using_db=connection)
+        if tournament.stages:
+            for stage in tournament.stages:
+                stage_obj, _ = await Stage.get_or_create(
+                    **stage.dict(exclude_unset=True), using_db=connection
+                )
+                await tournament_obj.stages.add(stage_obj)
+
+    return Tournament_Pydantic.parse_obj(await Tournament.get(name=tournament_name))
 
 
 @router.get(
@@ -49,11 +89,18 @@ async def update_tournament(tournament_name: str, tournament: TournamentIn_Pydan
 )
 async def get_tournament(tournament_name: str):
     try:
-        return await Tournament_Pydantic.from_queryset_single(Tournament.get(name=tournament_name))
+        tournament_obj = await Tournament.get(name=tournament_name)
+        return Tournament_Pydantic.parse_obj(tournament_obj)
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Tournament {tournament_name} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Tournament {tournament_name} not found"
+        )
 
 
 @router.get("/", response_model=List[Tournament_Pydantic])
 async def get_tournaments():
-    return await Tournament_Pydantic.from_queryset(Tournament.all())
+    tournaments_obj = await Tournament.all()
+    return [
+        Tournament_Pydantic.parse_obj(tournament_obj)
+        for tournament_obj in tournaments_obj
+    ]

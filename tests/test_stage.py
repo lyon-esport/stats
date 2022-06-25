@@ -3,6 +3,7 @@ from typing import Generator
 import pytest
 from fastapi.testclient import TestClient
 
+from les_stats.schemas.internal.stage import Stage_Pydantic
 from tests.utils import create_stage_by_db
 
 NAMESPACE = "/internal/stage/"
@@ -10,39 +11,52 @@ NAMESPACE = "/internal/stage/"
 
 @pytest.mark.parametrize(
     (
-        "name",
+        "j_data",
         "http_code",
-        "message",
     ),
-    (("Bracket", 200, ""),),
+    (
+        (
+            {
+                "ffff": "Bracket",
+            },
+            422,
+        ),
+        (
+            {
+                "name": "Bracket",
+            },
+            200,
+        ),
+    ),
 )
 @pytest.mark.anyio
 def test_post_stage(
     client: TestClient,
     event_loop: Generator,
-    name: str,
+    j_data: Stage_Pydantic,
     http_code: int,
-    message: str,
 ):
     response = client.post(
         f"{NAMESPACE}",
-        json={
-            "name": name,
-        },
+        json=j_data,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == http_code
+
     data = response.json()
-    assert data["name"] == name
+    if http_code == 200:
+        assert data["name"] == j_data["name"]
 
 
 @pytest.mark.parametrize(
     (
+        "id",
         "name",
         "http_code",
     ),
     (
         (
+            0,
             "Bracket",
             200,
         ),
@@ -50,7 +64,7 @@ def test_post_stage(
 )
 @pytest.mark.anyio
 def test_get_stages(
-    client: TestClient, event_loop: Generator, name: str, http_code: int
+    client: TestClient, event_loop: Generator, id: int, name: str, http_code: int
 ):
     event_loop.run_until_complete(create_stage_by_db(name))
 
@@ -58,7 +72,7 @@ def test_get_stages(
 
     assert response.status_code == http_code
     data = response.json()
-    assert data[id - 1]["name"] == name
+    assert data[id]["name"] == name
 
 
 @pytest.mark.parametrize(
@@ -66,10 +80,11 @@ def test_get_stages(
         "name",
         "http_code",
         "message",
+        "create",
     ),
     (
-        ("Bracket", 200, ""),
-        ("Bracket", 404, "Stage 0 not found"),
+        ("Bracket", 200, "", True),
+        ("Bracket158", 404, "Stage Bracket158 not found", False),
     ),
 )
 @pytest.mark.anyio
@@ -79,11 +94,13 @@ def test_get_stage(
     name: str,
     http_code: int,
     message: str,
+    create: bool,
 ):
-    event_loop.run_until_complete(create_stage_by_db(name))
+    if create:
+        event_loop.run_until_complete(create_stage_by_db(name))
 
     response = client.get(f"{NAMESPACE}{name}")
-
+    print(response.json())
     assert response.status_code == http_code
     data = response.json()
     if http_code == 200:
@@ -97,10 +114,11 @@ def test_get_stage(
         "name",
         "http_code",
         "message",
+        "create",
     ),
     (
-        ("Bracket", 200, "Deleted Stage 1"),
-        ("Bracket", 404, "Stage 0 not found"),
+        ("Bracket", 200, "Deleted Stage Bracket", True),
+        ("Bracket158", 404, "Stage Bracket158 not found", False),
     ),
 )
 @pytest.mark.anyio
@@ -110,11 +128,13 @@ def test_delete_stage(
     name: str,
     http_code: int,
     message: str,
+    create: bool,
 ):
-    event_loop.run_until_complete(create_stage_by_db(name))
+    if create:
+        event_loop.run_until_complete(create_stage_by_db(name))
 
-    response = client.delete(f"{NAMESPACE}{id}")
-
+    response = client.delete(f"{NAMESPACE}{name}")
+    print(response.json())
     assert response.status_code == http_code
     data = response.json()
     if http_code == 200:
