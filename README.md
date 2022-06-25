@@ -6,7 +6,7 @@ LoL statistics
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 # Install
-```
+```bash
 pip install les-stats
 ```
 
@@ -31,7 +31,7 @@ pre-commit run --all-files
 ```
 
 # Run
-Create an `.env` file with this content
+Create an `.env` file with this content or create environment variables prefixed with `LES_STATS_`
 ```
 DB_URL="Your db url following https://tortoise.github.io/databases.html"
 VALORANT_API_KEY="valorant api key"

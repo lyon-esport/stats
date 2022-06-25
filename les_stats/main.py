@@ -9,11 +9,15 @@ from prometheus_client import start_http_server
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
-from les_stats.config import settings
+from les_stats.config import Settings
 from les_stats.routers.api import api_router
 
 TITLE = "Lyon e-Sport stats API"
 VERSION = importlib.metadata.version("les_stats")
+
+
+def get_settings() -> Settings:
+    return Settings()
 
 
 def create_app() -> FastAPI:
@@ -45,15 +49,15 @@ app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_origins=[str(origin) for origin in get_settings().BACKEND_CORS_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-if settings.SENTRY_DSN:
+if get_settings().SENTRY_DSN:
     sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
+        dsn=get_settings().SENTRY_DSN,
         traces_sample_rate=0.5,
         release=VERSION,
     )
@@ -61,7 +65,7 @@ if settings.SENTRY_DSN:
 
 register_tortoise(
     app,
-    db_url=settings.DB_URL,
+    db_url=get_settings().DB_URL,
     modules={"models": ["les_stats.models"]},
     generate_schemas=True,
 )
@@ -79,4 +83,4 @@ async def swagger_ui_html():
 
 @app.on_event("startup")
 async def startup_event():
-    start_http_server(settings.EXPORTER_PORT)
+    start_http_server(get_settings().EXPORTER_PORT)
