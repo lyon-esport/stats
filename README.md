@@ -31,21 +31,23 @@ pre-commit run --all-files
 ```
 
 # Run
-Create an `.env` file with this content or create environment variables prefixed with `LES_STATS_`
+Create an `.env` file with this content or create environment variables
 ```
-DB_URL="Your db url following https://tortoise.github.io/databases.html"
-VALORANT_API_KEY="valorant api key"
-VALORANT_API_ROUTING="euw1"
+LES_STATS_DB_URL="Your db url following https://tortoise.github.io/databases.html"
+LES_STATS_VALORANT_API_KEY="valorant api key"
+LES_STATS_VALORANT_API_ROUTING="euw1"
 
 Optional:
-EXPORTER_PORT="your port (default 9345)"
-BACKEND_CORS_ORIGINS="[http://localhost.fr,http://test.localhost.fr]"
-SENTRY_DSN="your sentry DSN"
+LES_STATS_APP_HOST="Application bind sotcket to this host (default 127.0.0.1)"
+LES_STATS_APP_PORT="Application bind sotcket with this port (default 9345)"
+LES_STATS_EXPORTER_PORT="Exporter bind sotcket with this port (default 9345)"
+LES_STATS_BACKEND_CORS_ORIGINS="[http://localhost.fr,http://test.localhost.fr]"
+LES_STATS_SENTRY_DSN="your sentry DSN"
 ```
 
 Start the app
 ```
-uvicorn les_lol_stats.main:app --reload
+python3 -m les_stats.main
 ```
 
 # API

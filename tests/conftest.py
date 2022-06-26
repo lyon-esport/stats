@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import Generator
 
 import pytest
@@ -8,15 +7,16 @@ from tortoise.contrib.test import finalizer, initializer
 from tortoise.transactions import current_transaction_map
 
 from les_stats.main import create_app
+from les_stats.routers.api import api_router
 
 from . import env  # noqa: F401
 
 app = create_app()
+app.include_router(api_router)
 
 
 @pytest.fixture()
 def client() -> Generator:
-    print(os.environ["LES_STATS_DB_URL"])
     initializer(["les_stats.models"])
     current_transaction_map["default"] = current_transaction_map["models"]
     with TestClient(app) as c:

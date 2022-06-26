@@ -4,6 +4,8 @@ from pydantic import BaseSettings, HttpUrl, validator
 
 
 class Settings(BaseSettings):
+    APP_HOST: str = "127.0.0.1"
+    APP_PORT: int = 8000
     DB_URL: str
     EXPORTER_PORT: int = 9345
     VALORANT_API_KEY: str
@@ -11,8 +13,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[HttpUrl] = ""
     SENTRY_DSN: Optional[HttpUrl] = ""
 
-    @validator("EXPORTER_PORT", pre=True)
-    def check_exporter_port_is_valid(cls, v: str):
+    @validator("APP_PORT", "EXPORTER_PORT", pre=True, allow_reuse=True)
+    def check_port_is_valid(cls, v: str):
         v = int(v)
         if not 1 <= v <= 65535:
             return ValueError(v)

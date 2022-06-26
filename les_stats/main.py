@@ -1,6 +1,7 @@
 import importlib.metadata
 
 import sentry_sdk
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -38,49 +39,50 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
-    application.include_router(api_router)
-
     return application
 
 
-app = create_app()
+if __name__ == "__main__":
+    app = create_app()
 
-app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
+    app.include_router(api_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[str(origin) for origin in get_settings().BACKEND_CORS_ORIGINS],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
 
-if get_settings().SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=get_settings().SENTRY_DSN,
-        traces_sample_rate=0.5,
-        release=VERSION,
-    )
-    app.add_middleware(SentryAsgiMiddleware)
-
-register_tortoise(
-    app,
-    db_url=get_settings().DB_URL,
-    modules={"models": ["les_stats.models"]},
-    generate_schemas=True,
-)
-
-
-@app.get("/docs", include_in_schema=False)
-async def swagger_ui_html():
-    return get_swagger_ui_html(
-        title=TITLE,
-        openapi_url="/openapi.json",
-        swagger_favicon_url="/static/favicon.ico",
-        swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in get_settings().BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
+    if get_settings().SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=get_settings().SENTRY_DSN,
+            traces_sample_rate=0.5,
+            release=VERSION,
+        )
+        app.add_middleware(SentryAsgiMiddleware)
 
-@app.on_event("startup")
-async def startup_event():
-    start_http_server(get_settings().EXPORTER_PORT)
+    register_tortoise(
+        app,
+        db_url=get_settings().DB_URL,
+        modules={"models": ["les_stats.models"]},
+        generate_schemas=True,
+    )
+
+    @app.get("/docs", include_in_schema=False)
+    async def swagger_ui_html():
+        return get_swagger_ui_html(
+            title=TITLE,
+            openapi_url="/openapi.json",
+            swagger_favicon_url="/static/favicon.ico",
+            swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+        )
+
+    @app.on_event("startup")
+    async def startup_event():
+        start_http_server(get_settings().EXPORTER_PORT)
+
+    uvicorn.run(app, host=get_settings().APP_HOST, port=get_settings().APP_PORT)
