@@ -4,7 +4,7 @@ import pytest
 from pydantic import HttpUrl
 from pydantic.error_wrappers import ValidationError
 
-from les_stats.config import Settings
+from les_stats.utils.config import Settings
 
 
 @pytest.mark.parametrize(

@@ -1,15 +1,21 @@
-from typing import Generator
-
 import pytest
-from fastapi.testclient import TestClient
 
+from les_stats.models.internal.auth import Scope
+from les_stats.models.internal.tournament import Tournament
 from les_stats.schemas.internal.tournament import (
     Tournament_Pydantic,
     TournamentIn_Pydantic,
 )
-from tests.utils import create_tournament_by_db
+from tests.utils import CustomClient
 
 NAMESPACE = "/internal/tournament/"
+
+
+@pytest.mark.asyncio
+async def test_post_tournament_scopes(client: CustomClient):
+    await client.test_api_scope(
+        "POST", f"{NAMESPACE}", [Scope.write], json={"name": "test"}
+    )
 
 
 @pytest.mark.parametrize(
@@ -48,10 +54,9 @@ NAMESPACE = "/internal/tournament/"
         ),
     ),
 )
-@pytest.mark.anyio
-def test_post_tournament(
-    client: TestClient,
-    event_loop: Generator,
+@pytest.mark.asyncio
+async def test_post_tournament(
+    client: CustomClient,
     j_data: Tournament_Pydantic,
     http_code: int,
     dupplicate: bool,
@@ -61,13 +66,20 @@ def test_post_tournament(
         exec_time = 2
 
     for _ in range(0, exec_time):
-        response = client.post(f"{NAMESPACE}", json=j_data)
+        response = await client.test_api(
+            "POST", f"{NAMESPACE}", Scope.write, json=j_data
+        )
 
     assert response.status_code == http_code
 
     data = response.json()
     if http_code == 200:
         assert data["name"] == j_data["name"]
+
+
+@pytest.mark.asyncio
+async def test_get_tournaments_scopes(client: CustomClient):
+    await client.test_api_scope("GET", f"{NAMESPACE}", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -84,17 +96,22 @@ def test_post_tournament(
         ),
     ),
 )
-@pytest.mark.anyio
-def test_get_tournaments(
-    client: TestClient, event_loop: Generator, id: int, name: str, http_code: int
+@pytest.mark.asyncio
+async def test_get_tournaments(
+    client: CustomClient, id: int, name: str, http_code: int
 ):
-    event_loop.run_until_complete(create_tournament_by_db(name))
+    await Tournament.create(name=name)
 
-    response = client.get(f"{NAMESPACE}")
+    response = await client.test_api("GET", f"{NAMESPACE}", Scope.read)
 
     assert response.status_code == http_code
     data = response.json()
     assert data[id]["name"] == name
+
+
+@pytest.mark.asyncio
+async def test_get_tournament_scopes(client: CustomClient):
+    await client.test_api_scope("GET", f"{NAMESPACE}test", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -109,19 +126,18 @@ def test_get_tournaments(
         ("Pro158", 404, "Tournament Pro158 not found", False),
     ),
 )
-@pytest.mark.anyio
-def test_get_tournament(
-    client: TestClient,
-    event_loop: Generator,
+@pytest.mark.asyncio
+async def test_get_tournament(
+    client: CustomClient,
     name: str,
     http_code: int,
     message: str,
     create: bool,
 ):
     if create:
-        event_loop.run_until_complete(create_tournament_by_db(name))
+        await Tournament.create(name=name)
 
-    response = client.get(f"{NAMESPACE}{name}")
+    response = await client.test_api("GET", f"{NAMESPACE}{name}", Scope.read)
 
     assert response.status_code == http_code
     data = response.json()
@@ -129,6 +145,11 @@ def test_get_tournament(
         assert data["name"] == name
     elif http_code == 404:
         assert data["detail"] == message
+
+
+@pytest.mark.asyncio
+async def test_delete_tournament_scopes(client: CustomClient):
+    await client.test_api_scope("DELETE", f"{NAMESPACE}test", [Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -143,19 +164,18 @@ def test_get_tournament(
         ("Pro158", 404, "Tournament Pro158 not found", False),
     ),
 )
-@pytest.mark.anyio
-def test_delete_tournament(
-    client: TestClient,
-    event_loop: Generator,
+@pytest.mark.asyncio
+async def test_delete_tournament(
+    client: CustomClient,
     name: str,
     http_code: int,
     message: str,
     create: bool,
 ):
     if create:
-        event_loop.run_until_complete(create_tournament_by_db(name))
+        await Tournament.create(name=name)
 
-    response = client.delete(f"{NAMESPACE}{name}")
+    response = await client.test_api("DELETE", f"{NAMESPACE}{name}", Scope.write)
 
     assert response.status_code == http_code
     data = response.json()
@@ -163,6 +183,11 @@ def test_delete_tournament(
         assert data["message"] == message
     elif http_code == 404:
         assert data["detail"] == message
+
+
+@pytest.mark.asyncio
+async def test_put_tournament_scopes(client: CustomClient):
+    await client.test_api_scope("PUT", f"{NAMESPACE}test", [Scope.write], json={})
 
 
 @pytest.mark.parametrize(
@@ -192,10 +217,9 @@ def test_delete_tournament(
         ),
     ),
 )
-@pytest.mark.anyio
-def test_put_tournaments(
-    client: TestClient,
-    event_loop: Generator,
+@pytest.mark.asyncio
+async def test_put_tournaments(
+    client: CustomClient,
     name: str,
     j_data: TournamentIn_Pydantic,
     http_code: int,
@@ -203,9 +227,11 @@ def test_put_tournaments(
     create: bool,
 ):
     if create:
-        event_loop.run_until_complete(create_tournament_by_db(name))
+        await Tournament.create(name=name)
 
-    response = client.put(f"{NAMESPACE}{name}", json=j_data)
+    response = await client.test_api(
+        "PUT", f"{NAMESPACE}{name}", Scope.write, json=j_data
+    )
 
     assert response.status_code == http_code
     data = response.json()

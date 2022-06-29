@@ -1,41 +1,71 @@
-import asyncio
-from dataclasses import dataclass, field
-from typing import Dict, List
+from enum import Enum
+from typing import List
 
 import httpx
 
+from les_stats.client_api.client import ClientAPI, Req
+from les_stats.utils.config import get_settings
+from les_stats.utils.metrics import (
+    metric_request_failed_processing_seconds_api,
+    metric_request_rate_limit_total_api,
+    metric_request_success_processing_seconds_api,
+)
 
-@dataclass
-class Req:
-    method: str
-    endpoint: str
-    body: Dict = field(default_factory=dict)
-    params: str = field(default_factory=dict)
+
+class RiotGame(str, Enum):
+    valorant = "valorant"
+    lol = "lol"
 
 
-class RiotAPI:
-    def __init__(self, api_key: str, routing: str) -> None:
-        self.api_key = api_key
-        self.routing = routing
+class RiotAPI(ClientAPI):
+    def __init__(self, game: RiotGame) -> None:
+        super().__init__(game, game.value)
+        self.routing = game
         self.base_api_url = "api.riotgames.com"
+
+    @ClientAPI.api_key.setter
+    def api_key(self, game: str):
+        api_key = ""
+
+        if game == RiotGame.valorant:
+            api_key = get_settings().VALORANT_API_KEY
+        elif game == RiotGame.lol:
+            api_key = get_settings().LOL_API_KEY
+
+        self._api_key = api_key
+
+    @property
+    def routing(self):
+        return self._routing
+
+    @routing.setter
+    def routing(self, game: str):
+        routing = ""
+
+        if game == RiotGame.valorant:
+            routing = get_settings().VALORANT_API_ROUTING
+        elif game == RiotGame.lol:
+            routing = get_settings().LOL_API_ROUTING
+
+        self._routing = routing
 
     def build_url(self, endpoint: str) -> str:
         return f"https://{self.routing}.{self.base_api_url}{endpoint}"
 
-    async def make_request(self, reqs: List[Req]) -> List[httpx.Response]:
-        tasks = []
+    def _generate_response_metrics(self, resps: List[httpx.Response]) -> None:
+        for resp in resps:
+            req_time_sec = resp.elapsed.total_seconds()
 
-        async with httpx.AsyncClient() as client:
-            for req in reqs:
-                request = httpx.Request(req.method, self.build_url(req.endpoint))
-                request.params = req.params
-                request.body = req.body
-                request.headers["X-Riot-Token"] = self.api_key
-                tasks.append(asyncio.ensure_future(client.send(request)))
-
-            responses = await asyncio.gather(*tasks)
-
-        return responses
+            if resp.is_success:
+                metric_request_success_processing_seconds_api.labels(self.game).observe(
+                    req_time_sec
+                )
+            else:
+                if resp.status_code == 429:
+                    metric_request_rate_limit_total_api.labels(self.game).inc()
+                metric_request_failed_processing_seconds_api.labels(self.game).observe(
+                    req_time_sec
+                )
 
     async def test(self):
         return await self.make_request(

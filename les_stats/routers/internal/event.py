@@ -1,21 +1,25 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
+from les_stats.models.internal.auth import Scope
 from les_stats.models.internal.event import Event
 from les_stats.models.internal.stage import Stage
 from les_stats.models.internal.tournament import Tournament
 from les_stats.schemas.internal.event import Event_Pydantic, EventIn_Pydantic
+from les_stats.utils.auth import scope_required
+from les_stats.utils.metrics import metric_event, metric_stage, metric_tournament
 from les_stats.utils.status import Status
 
 router = APIRouter()
 
 
 @router.post("/", response_model=None)
-async def add_event(event: Event_Pydantic):
+@scope_required([Scope.write])
+async def add_event(request: Request, event: Event_Pydantic):
     async with in_transaction("default") as connection:
         if not await Event.exists(name=event.name):
             event_obj = Event(**event.dict(exclude={"tournaments"}, exclude_unset=True))
@@ -33,12 +37,14 @@ async def add_event(event: Event_Pydantic):
                                 **stage.dict(exclude_unset=True), using_db=connection
                             )
                             await tournament_obj.stages.add(stage_obj)
-
-            return Event_Pydantic.parse_obj(event_obj)
         else:
             raise HTTPException(
                 status_code=409, detail=f"Event {event.name} already exist"
             )
+    metric_event.inc()
+    metric_tournament.inc(await Tournament.all().count())
+    metric_stage.inc(await Stage.all().count())
+    return Event_Pydantic.parse_obj(event_obj)
 
 
 @router.delete(
@@ -46,10 +52,12 @@ async def add_event(event: Event_Pydantic):
     response_model=Status,
     responses={404: {"model": HTTPNotFoundError}},
 )
-async def delete_event(event_name: str):
+@scope_required([Scope.write])
+async def delete_event(request: Request, event_name: str):
     deleted_count = await Event.filter(name=event_name).delete()
     if not deleted_count:
         raise HTTPException(status_code=404, detail=f"Event {event_name} not found")
+    metric_event.dec()
     return Status(message=f"Deleted Event {event_name}")
 
 
@@ -58,7 +66,8 @@ async def delete_event(event_name: str):
     response_model=Event_Pydantic,
     responses={404: {"model": HTTPNotFoundError}},
 )
-async def update_event(event_name: str, event: EventIn_Pydantic):
+@scope_required([Scope.write])
+async def update_event(request: Request, event_name: str, event: EventIn_Pydantic):
     try:
         Event_Pydantic.parse_obj(await Event.get(name=event_name))
     except DoesNotExist:
@@ -89,7 +98,8 @@ async def update_event(event_name: str, event: EventIn_Pydantic):
     response_model=Event_Pydantic,
     responses={404: {"model": HTTPNotFoundError}},
 )
-async def get_event(event_name: str):
+@scope_required([Scope.read, Scope.write])
+async def get_event(request: Request, event_name: str):
     try:
         event_obj = await Event.get(name=event_name)
         return Event_Pydantic.parse_obj(event_obj)
@@ -98,6 +108,7 @@ async def get_event(event_name: str):
 
 
 @router.get("/", response_model=List[Event_Pydantic])
-async def get_events():
+@scope_required([Scope.read, Scope.write])
+async def get_events(request: Request):
     events_obj = await Event.all()
     return [Event_Pydantic.parse_obj(event_obj) for event_obj in events_obj]

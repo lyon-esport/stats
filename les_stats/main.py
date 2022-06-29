@@ -1,4 +1,5 @@
 import importlib.metadata
+import logging
 
 import sentry_sdk
 import uvicorn
@@ -10,15 +11,12 @@ from prometheus_client import start_http_server
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
-from les_stats.config import Settings
 from les_stats.routers.api import api_router
+from les_stats.utils.config import get_settings
+from les_stats.utils.metrics import init_metrics
 
 TITLE = "Lyon e-Sport stats API"
 VERSION = importlib.metadata.version("les_stats")
-
-
-def get_settings() -> Settings:
-    return Settings()
 
 
 def create_app() -> FastAPI:
@@ -39,13 +37,15 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
+    application.include_router(api_router)
+
     return application
 
 
 if __name__ == "__main__":
-    app = create_app()
+    logger = logging.getLogger(__name__)
 
-    app.include_router(api_router)
+    app = create_app()
 
     app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
 
@@ -83,6 +83,12 @@ if __name__ == "__main__":
 
     @app.on_event("startup")
     async def startup_event():
-        start_http_server(get_settings().EXPORTER_PORT)
+        await init_metrics()
+        start_http_server(
+            addr=get_settings().EXPORTER_ADDR, port=get_settings().EXPORTER_PORT
+        )
+        logger.info(
+            f"Exporter running on http://{get_settings().EXPORTER_ADDR}:{get_settings().EXPORTER_PORT}"
+        )
 
     uvicorn.run(app, host=get_settings().APP_HOST, port=get_settings().APP_PORT)

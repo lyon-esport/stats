@@ -1,15 +1,46 @@
-from les_stats.models.internal.event import Event
-from les_stats.models.internal.stage import Stage
-from les_stats.models.internal.tournament import Tournament
+from typing import List
+
+from fastapi.testclient import TestClient
+
+from les_stats.models.internal.auth import Api, Scope
+from les_stats.utils.auth import API_KEY_SIZE_MAX
 
 
-async def create_event_by_db(name: str):
-    await Event.create(name=name)
+class CustomClient(TestClient):
+    async def test_api_scope(
+        self, method: str, url: str, allowed_scopes: List[Scope], json: dict = None
+    ):
+        allowed_scopes_values = [
+            allowed_scope.value for allowed_scope in allowed_scopes
+        ]
+        for allowed_scope in allowed_scopes_values:
+            api_key = ("a" * API_KEY_SIZE_MAX)[: -len(allowed_scope)] + allowed_scope
+            await Api.create(
+                name=f"TEST_SCOPE_{allowed_scope}", scope=allowed_scope, api_key=api_key
+            )
+            r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
+            assert r.status_code != 403
 
+        for not_allowed_scope in list(
+            set(list(Scope.__members__.keys())) - set(allowed_scopes_values)
+        ):
+            api_key = ("a" * API_KEY_SIZE_MAX)[
+                : -len(not_allowed_scope)
+            ] + not_allowed_scope
+            await Api.create(
+                name=f"TEST_SCOPE_{not_allowed_scope}",
+                scope=not_allowed_scope,
+                api_key=api_key,
+            )
+            r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
+            assert r.status_code == 403
 
-async def create_tournament_by_db(name: str):
-    await Tournament.create(name=name)
+        r = self.request(method, url, json=json)
+        assert r.status_code == 403
 
-
-async def create_stage_by_db(name: str):
-    await Stage.create(name=name)
+    async def test_api(self, method: str, url: str, scope: str, json: dict = None):
+        api_key = ("a" * API_KEY_SIZE_MAX)[: -len(scope)] + scope
+        await Api.get_or_create(
+            name=f"TEST_SCOPE_{scope}", scope=scope, api_key=api_key
+        )
+        return self.request(method, url, headers={"x-api-key": api_key}, json=json)

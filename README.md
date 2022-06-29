@@ -36,10 +36,13 @@ Create an `.env` file with this content or create environment variables
 LES_STATS_DB_URL="Your db url following https://tortoise.github.io/databases.html"
 LES_STATS_VALORANT_API_KEY="valorant api key"
 LES_STATS_VALORANT_API_ROUTING="euw1"
+LES_STATS_LOL_API_KEY="lol api key"
+LES_STATS_LOL_API_ROUTING="euw1"
 
 Optional:
 LES_STATS_APP_HOST="Application bind sotcket to this host (default 127.0.0.1)"
-LES_STATS_APP_PORT="Application bind sotcket with this port (default 9345)"
+LES_STATS_APP_PORT="Application bind sotcket with this port (default 8000)"
+LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default 9345)"
 LES_STATS_EXPORTER_PORT="Exporter bind sotcket with this port (default 9345)"
 LES_STATS_BACKEND_CORS_ORIGINS="[http://localhost.fr,http://test.localhost.fr]"
 LES_STATS_SENTRY_DSN="your sentry DSN"
@@ -48,6 +51,11 @@ LES_STATS_SENTRY_DSN="your sentry DSN"
 Start the app
 ```
 python3 -m les_stats.main
+```
+
+Create API Key
+```
+python3 -m les_stats.utils.auth --help
 ```
 
 # API

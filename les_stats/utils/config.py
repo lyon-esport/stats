@@ -7,7 +7,10 @@ class Settings(BaseSettings):
     APP_HOST: str = "127.0.0.1"
     APP_PORT: int = 8000
     DB_URL: str
+    EXPORTER_ADDR: str = "127.0.0.1"
     EXPORTER_PORT: int = 9345
+    LOL_API_KEY: str
+    LOL_API_ROUTING: str
     VALORANT_API_KEY: str
     VALORANT_API_ROUTING: str
     BACKEND_CORS_ORIGINS: List[HttpUrl] = ""
@@ -37,3 +40,7 @@ class Settings(BaseSettings):
     class Config:
         env_prefix = "LES_STATS_"
         env_file = ".env"
+
+
+def get_settings() -> Settings:
+    return Settings()
