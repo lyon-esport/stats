@@ -5,12 +5,10 @@ from asyncclick.testing import CliRunner
 from tortoise import current_transaction_map
 from tortoise.contrib.test import finalizer, initializer
 
-from les_stats.utils.app import create_app
+from les_stats.main import create_app
 from tests.utils import CustomClient
 
-from . import env  # noqa: F401
-
-app = create_app("Lyon e-Sport stats API", "dev")
+app = create_app()
 
 
 @pytest.fixture()

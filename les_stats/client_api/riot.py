@@ -19,11 +19,17 @@ class RiotGame(str, Enum):
 
 class RiotAPI(ClientAPI):
     def __init__(self, game: RiotGame) -> None:
-        super().__init__(game, game.value)
+        self.game = game
         self.routing = game
+        self.api_key = game
         self.base_api_url = "api.riotgames.com"
+        super().__init__(httpx.AsyncClient(headers={"X-Riot-Token": self.api_key}))
 
-    @ClientAPI.api_key.setter
+    @property
+    def api_key(self):
+        return self._api_key
+
+    @api_key.setter
     def api_key(self, game: str):
         api_key = ""
 
