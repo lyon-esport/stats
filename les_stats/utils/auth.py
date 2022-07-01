@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 import string
 from functools import wraps
@@ -7,22 +8,24 @@ import asyncclick as click
 from fastapi import Header, HTTPException
 
 from les_stats.models.internal.auth import Api, Scope
-from les_stats.utils.config import Settings
+from les_stats.utils.config import get_settings
 from les_stats.utils.db import close_db, init_db
 
-API_KEY_SIZE_MIN = 50
-API_KEY_SIZE_MAX = 64
 
-
-def get_settings() -> Settings:
-    return Settings()
+def get_digest(x_api_key: str) -> str:
+    digest = hashlib.pbkdf2_hmac(
+        "sha512", x_api_key.encode(), get_settings().SALT.encode(), 1000
+    )
+    return digest.hex()
 
 
 def scope_required(scopes: List[str]):
     def wrapper(func):
         @wraps(func)
         async def wrap(request, *args, **kwargs):
-            api_obj = await Api.get(api_key=request.headers.get("x-api-key"))
+            api_obj = await Api.get(
+                api_key=get_digest(request.headers.get("x-api-key"))
+            )
 
             if api_obj.scope not in scopes:
                 raise HTTPException(status_code=403, detail="X-Api-Key header invalid")
@@ -35,7 +38,8 @@ def scope_required(scopes: List[str]):
 
 
 async def verify_api_key(x_api_key: str = Header(default=None)):
-    if await Api.filter(api_key=x_api_key).count() != 1:
+
+    if await Api.filter(api_key=get_digest(x_api_key)).count() != 1:
         raise HTTPException(status_code=403, detail="X-Api-Key header invalid")
     return x_api_key
 
@@ -66,12 +70,9 @@ async def create_api_key(name: str, scope: str) -> None:
 
     alphabet = string.ascii_letters + string.digits + string.punctuation
     api_key = "".join(
-        secrets.choice(alphabet)
-        for _ in range(
-            secrets.SystemRandom().randint(API_KEY_SIZE_MIN, API_KEY_SIZE_MAX)
-        )
+        secrets.choice(alphabet) for _ in range(secrets.SystemRandom().randint(50, 64))
     )
-    await Api.create(name=name, api_key=api_key, scope=scope)
+    await Api.create(name=name, api_key=get_digest(api_key), scope=scope)
 
     click.echo(api_key)
 

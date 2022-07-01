@@ -9,7 +9,7 @@ class Scope(str, Enum):
 
 
 class Api(models.Model):
-    api_key = fields.CharField(pk=True, max_length=64)
+    api_key = fields.CharField(pk=True, max_length=200)
     name = fields.CharField(unique=True, max_length=200, null=False)
     scope: Scope = fields.CharEnumField(Scope, default=Scope.read)
 

@@ -43,10 +43,9 @@ def create_app() -> FastAPI:
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("uvicorn")
 
     app = create_app()
-
     app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
 
     app.add_middleware(

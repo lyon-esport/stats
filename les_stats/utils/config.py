@@ -7,12 +7,13 @@ class Settings(BaseSettings):
     APP_HOST: str = "127.0.0.1"
     APP_PORT: int = 8000
     DB_URL: str
+    SALT: str
     EXPORTER_ADDR: str = "127.0.0.1"
     EXPORTER_PORT: int = 9345
-    LOL_API_KEY: str
-    LOL_API_ROUTING: str
-    VALORANT_API_KEY: str
-    VALORANT_API_ROUTING: str
+    LOL_API_KEY: str = None
+    LOL_API_ROUTING: str = None
+    VALORANT_API_KEY: str = None
+    VALORANT_API_ROUTING: str = None
     BACKEND_CORS_ORIGINS: List[HttpUrl] = ""
     SENTRY_DSN: Optional[HttpUrl] = ""
 

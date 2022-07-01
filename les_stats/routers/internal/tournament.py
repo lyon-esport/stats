@@ -43,7 +43,7 @@ async def add_tournament(request: Request, tournament: Tournament_Pydantic):
                 status_code=409, detail=f"Tournament {tournament.name} already exist"
             )
     metric_tournament.inc()
-    metric_stage.inc((await Stage.all().count()))
+    metric_stage.inc(await Stage.all().count())
     return Tournament_Pydantic.parse_obj(tournament_obj)
 
 
