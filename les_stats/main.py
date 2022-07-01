@@ -3,7 +3,6 @@ import logging
 
 import sentry_sdk
 import uvicorn
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
@@ -11,41 +10,18 @@ from prometheus_client import start_http_server
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
-from les_stats.routers.api import api_router
+from les_stats.utils.app import create_app
 from les_stats.utils.config import get_settings
 from les_stats.utils.metrics import init_metrics
 
-TITLE = "Lyon e-Sport stats API"
-VERSION = importlib.metadata.version("les_stats")
-
-
-def create_app() -> FastAPI:
-    application = FastAPI(
-        title=TITLE,
-        description="Statistics for games",
-        version=VERSION,
-        contact={
-            "name": "Lyon e-Sport",
-            "url": "https://www.lyon-esport.fr/contact/",
-            "email": "dev@lyon-esport.fr",
-        },
-        license_info={
-            "name": "CeCILL-2.1",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
-        },
-        docs_url=None,
-        redoc_url=None,
-    )
-
-    application.include_router(api_router)
-
-    return application
-
-
 if __name__ == "__main__":
-    logger = logging.getLogger("uvicorn")
+    title = "Lyon e-Sport stats API"
+    version = importlib.metadata.version("les_stats")
 
-    app = create_app()
+    logger = logging.getLogger("uvicorn")
+    logger.info(f"Starting les_stats v{version}")
+
+    app = create_app(title, version)
     app.mount("/static", StaticFiles(directory="les_stats/static"), name="static")
 
     app.add_middleware(
@@ -60,7 +36,7 @@ if __name__ == "__main__":
         sentry_sdk.init(
             dsn=get_settings().SENTRY_DSN,
             traces_sample_rate=0.5,
-            release=VERSION,
+            release=version,
         )
         app.add_middleware(SentryAsgiMiddleware)
 
@@ -74,7 +50,7 @@ if __name__ == "__main__":
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html():
         return get_swagger_ui_html(
-            title=TITLE,
+            title=title,
             openapi_url="/openapi.json",
             swagger_favicon_url="/static/favicon.ico",
             swagger_ui_parameters={"defaultModelsExpandDepth": -1},

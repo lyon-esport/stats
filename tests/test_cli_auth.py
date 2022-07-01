@@ -40,7 +40,6 @@ async def test_create_api_key(
         params = [name, "--scope", scope]
 
     result = await runner.invoke(create_api_key, params)
-    print(result.output)
     assert result.exit_code == rc
     if rc != 0:
         assert result.exception

@@ -11,6 +11,9 @@ from les_stats.models.internal.auth import Api, Scope
 from les_stats.utils.config import get_settings
 from les_stats.utils.db import close_db, init_db
 
+API_KEY_SIZE_MIN = 50
+API_KEY_SIZE_MAX = 64
+
 
 def get_digest(x_api_key: str) -> str:
     digest = hashlib.pbkdf2_hmac(
@@ -38,8 +41,10 @@ def scope_required(scopes: List[str]):
 
 
 async def verify_api_key(x_api_key: str = Header(default=None)):
-
-    if await Api.filter(api_key=get_digest(x_api_key)).count() != 1:
+    if (
+        x_api_key is None
+        or await Api.filter(api_key=get_digest(x_api_key)).count() != 1
+    ):
         raise HTTPException(status_code=403, detail="X-Api-Key header invalid")
     return x_api_key
 
@@ -70,7 +75,10 @@ async def create_api_key(name: str, scope: str) -> None:
 
     alphabet = string.ascii_letters + string.digits + string.punctuation
     api_key = "".join(
-        secrets.choice(alphabet) for _ in range(secrets.SystemRandom().randint(50, 64))
+        secrets.choice(alphabet)
+        for _ in range(
+            secrets.SystemRandom().randint(API_KEY_SIZE_MIN, API_KEY_SIZE_MAX - 1)
+        )
     )
     await Api.create(name=name, api_key=get_digest(api_key), scope=scope)
 
