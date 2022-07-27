@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 from prometheus_client import start_http_server
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 from tortoise.contrib.fastapi import register_tortoise
 
 from les_stats.routers.api import api_router
@@ -59,10 +60,10 @@ if __name__ == "__main__":
     if get_settings().SENTRY_DSN:
         sentry_sdk.init(
             dsn=get_settings().SENTRY_DSN,
+            integrations=[StarletteIntegration(), FastApiIntegration()],
             traces_sample_rate=0.5,
             release=version,
         )
-        app.add_middleware(SentryAsgiMiddleware)
 
     register_tortoise(
         app,

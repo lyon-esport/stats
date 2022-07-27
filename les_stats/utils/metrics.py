@@ -1,12 +1,9 @@
 from prometheus_client import Counter, Gauge, Summary
 
-from les_stats.models.internal.event import Event
-from les_stats.models.internal.stage import Stage
-from les_stats.models.internal.tournament import Tournament
-
 metric_event = Gauge("les_stats_event_total", "number of event")
 metric_tournament = Gauge("les_stats_event_tournament", "number of tournament")
 metric_stage = Gauge("les_stats_event_stage", "number of stage")
+metric_game = Gauge("les_stats_game", "number of game registered in system", ["game"])
 
 metric_request_success_processing_seconds_api = Summary(
     "les_stats_request_success_processing_seconds",
@@ -19,11 +16,18 @@ metric_request_failed_processing_seconds_api = Summary(
     ["client"],
 )
 metric_request_rate_limit_total_api = Counter(
-    "les_stats_request_rate_limit_total", "number of API rate limit", ["client"]
+    "les_stats_request_rate_limit_total", "number of API rate limit", ["game"]
 )
 
 
 async def init_metrics() -> None:
+    from les_stats.client_api.riot import RiotGame
+    from les_stats.models.internal.event import Event
+    from les_stats.models.internal.stage import Stage
+    from les_stats.models.internal.tournament import Tournament
+    from les_stats.models.tft.game import TFTGame
+
     metric_event.set(await Event.all().count())
     metric_tournament.set(await Tournament.all().count())
     metric_stage.set(await Stage.all().count())
+    metric_game.labels(RiotGame.tft).set(await TFTGame.all().count())
