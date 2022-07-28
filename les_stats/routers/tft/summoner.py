@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 
-from les_stats.client_api.riot import RiotAPI, RiotGame
+from les_stats.client_api.riot import RiotAPI
 from les_stats.models.internal.auth import Scope
 from les_stats.schemas.client_api.data import DataResponse
+from les_stats.schemas.riot.game import RiotGame
 from les_stats.utils.auth import scope_required
 
 router = APIRouter()
@@ -13,14 +14,20 @@ router = APIRouter()
 @router.get("/by-puuid/", response_model=List[DataResponse])
 @scope_required([Scope.read, Scope.write])
 async def get_summoners_name_from_puuid(
-    request: Request, encrypted_puuids: List[str] = Query(None)
+    request: Request, response: Response, encrypted_puuid: List[str] = Query()
 ):
-    return await RiotAPI(RiotGame.tft).get_summoners_name(encrypted_puuids)
+    response.status_code, data = await RiotAPI(RiotGame.tft).get_summoners_name(
+        encrypted_puuid
+    )
+    return data
 
 
 @router.get("/by-name/", response_model=List[DataResponse])
 @scope_required([Scope.read, Scope.write])
 async def get_summoners_puuid_from_name(
-    request: Request, summoners_name: List[str] = Query(None)
+    request: Request, response: Response, summoner_name: List[str] = Query()
 ):
-    return await RiotAPI(RiotGame.tft).get_summoners_puuid(summoners_name)
+    response.status_code, data = await RiotAPI(RiotGame.tft).get_summoners_puuid(
+        summoner_name
+    )
+    return data

@@ -12,9 +12,9 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from tortoise.contrib.fastapi import register_tortoise
 
+from les_stats.metrics.main import init_metrics
 from les_stats.routers.api import api_router
 from les_stats.utils.config import get_settings
-from les_stats.utils.metrics import init_metrics
 
 title = "Lyon e-Sport stats API"
 version = importlib.metadata.version("les_stats")

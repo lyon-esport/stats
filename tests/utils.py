@@ -1,4 +1,5 @@
-from typing import List
+import json
+from typing import Any, Dict, List
 
 from fastapi.testclient import TestClient
 
@@ -21,6 +22,7 @@ class CustomClient(TestClient):
                 api_key=get_digest(api_key),
             )
             r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
+            print(r.text)
             assert r.status_code != 403
 
         for not_allowed_scope in list(
@@ -38,7 +40,7 @@ class CustomClient(TestClient):
             assert r.status_code == 403
 
         r = self.request(method, url, json=json)
-        assert r.status_code == 403
+        assert r.status_code == 422
 
     async def test_api(self, method: str, url: str, scope: str, json: dict = None):
         api_key = ("a" * API_KEY_SIZE_MAX)[: -len(scope)] + scope
@@ -46,3 +48,8 @@ class CustomClient(TestClient):
             name=f"TEST_SCOPE_{scope}", scope=scope, api_key=get_digest(api_key)
         )
         return self.request(method, url, headers={"x-api-key": api_key}, json=json)
+
+
+def get_json_response(filename: str) -> Dict[Any, Any]:
+    with open(f"tests/mocked_data/{filename}.json", "r") as f:
+        return json.loads(f.read())

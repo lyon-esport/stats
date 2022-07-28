@@ -4,11 +4,11 @@ from fastapi import APIRouter, HTTPException, Request
 from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
 
+from les_stats.metrics.internal.metrics import metric_stage
 from les_stats.models.internal.auth import Scope
 from les_stats.models.internal.stage import Stage
 from les_stats.schemas.internal.stage import Stage_Pydantic
 from les_stats.utils.auth import scope_required
-from les_stats.utils.metrics import metric_stage
 from les_stats.utils.status import Status
 
 router = APIRouter()

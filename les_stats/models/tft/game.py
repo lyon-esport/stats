@@ -1,5 +1,7 @@
 from tortoise import fields, models
 
+from les_stats.schemas.riot.game import RiotHost
+
 
 class TFTGame(models.Model):
     match_id = fields.CharField(pk=True, max_length=200)
@@ -14,7 +16,11 @@ class TFTGame(models.Model):
 
 
 class TFTPlayer(models.Model):
-    puuid = fields.CharField(pk=True, max_length=200)
+    puuid = fields.CharField(max_length=200)
+    region: RiotHost = fields.CharEnumField(RiotHost)
+
+    class Meta:
+        unique_together = ("puuid", "region")
 
 
 class TFTParticipant(models.Model):

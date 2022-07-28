@@ -34,13 +34,15 @@ pre-commit run --all-files
 Create an `.env` file with this content or create environment variables
 ```
 LES_STATS_DB_URL="Your db url following https://tortoise.github.io/databases.html"
-LES_STATS_SALT="Salt used to hash API key"
+LES_STATS_SALT="Salt used to hash API key of internal app"
 
 Optional:
+LES_STATS_TFT_API_KEY="tft api key"
+LES_STATS_TFT_API_ROUTING="lol api routing"
 LES_STATS_VALORANT_API_KEY="valorant api key"
-LES_STATS_VALORANT_API_ROUTING="euw1"
+LES_STATS_VALORANT_API_ROUTING="lol api routing"
 LES_STATS_LOL_API_KEY="lol api key"
-LES_STATS_LOL_API_ROUTING="euw1"
+LES_STATS_LOL_API_ROUTING="lol api routing"
 LES_STATS_APP_HOST="Application bind sotcket to this host (default 127.0.0.1)"
 LES_STATS_APP_PORT="Application bind sotcket with this port (default 8000)"
 LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default 9345)"

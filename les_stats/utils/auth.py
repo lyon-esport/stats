@@ -40,7 +40,7 @@ def scope_required(scopes: List[str]):
     return wrapper
 
 
-async def verify_api_key(x_api_key: str = Header(default=None)):
+async def verify_api_key(x_api_key: str = Header()):
     if (
         x_api_key is None
         or await Api.filter(api_key=get_digest(x_api_key)).count() != 1

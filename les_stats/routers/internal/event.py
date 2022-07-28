@@ -5,13 +5,17 @@ from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
+from les_stats.metrics.internal.metrics import (
+    metric_event,
+    metric_stage,
+    metric_tournament,
+)
 from les_stats.models.internal.auth import Scope
 from les_stats.models.internal.event import Event
 from les_stats.models.internal.stage import Stage
 from les_stats.models.internal.tournament import Tournament
 from les_stats.schemas.internal.event import Event_Pydantic, EventIn_Pydantic
 from les_stats.utils.auth import scope_required
-from les_stats.utils.metrics import metric_event, metric_stage, metric_tournament
 from les_stats.utils.status import Status
 
 router = APIRouter()

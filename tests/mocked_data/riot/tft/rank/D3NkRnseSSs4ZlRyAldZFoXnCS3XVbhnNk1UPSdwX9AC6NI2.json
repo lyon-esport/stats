@@ -1,0 +1,17 @@
+[
+    {
+        "leagueId": "1d13ce16-27ef-3481-9c9d-5bd98dd453ba",
+        "queueType": "RANKED_TFT",
+        "tier": "CHALLENGER",
+        "rank": "I",
+        "summonerId": "D3NkRnseSSs4ZlRyAldZFoXnCS3XVbhnNk1UPSdwX9AC6NI2",
+        "summonerName": "KC Double61",
+        "leaguePoints": 1674,
+        "wins": 181,
+        "losses": 86,
+        "veteran": true,
+        "inactive": false,
+        "freshBlood": false,
+        "hotStreak": false
+    }
+]

@@ -1,0 +1,6 @@
+{
+    "status": {
+        "message": "Data not found - summoner not found",
+        "status_code": 404
+    }
+}
