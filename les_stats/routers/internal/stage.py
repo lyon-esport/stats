@@ -14,7 +14,7 @@ from les_stats.utils.status import Status
 router = APIRouter()
 
 
-@router.post("/", response_model=None)
+@router.post("", response_model=None)
 @scope_required([Scope.write])
 async def add_stage(request: Request, stage: Stage_Pydantic):
     if not await Stage.exists(name=stage.name):
@@ -52,7 +52,7 @@ async def get_stage(request: Request, stage_name: str):
         raise HTTPException(status_code=404, detail=f"Stage {stage_name} not found")
 
 
-@router.get("/", response_model=List[Stage_Pydantic])
+@router.get("", response_model=List[Stage_Pydantic])
 @scope_required([Scope.read, Scope.write])
 async def get_stages(request: Request):
     stages_obj = await Stage.all()

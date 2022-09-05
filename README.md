@@ -1,9 +1,13 @@
-LoL statistics
+Statistics for various games
 
 [![PyPI](https://img.shields.io/pypi/v/les-stats.svg)](https://pypi.python.org/pypi/les-stats)
 [![PyPI versions](https://img.shields.io/pypi/pyversions/les-stats.svg)](https://pypi.python.org/pypi/les-stats)
 [![Python test](https://github.com/lyon-esport/stats/actions/workflows/test.yml/badge.svg)](https://github.com/lyon-esport/stats/actions/workflows/test.yml)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+# Games supported
+- TFT
+- Valorant
 
 # Install
 ```bash
@@ -33,6 +37,7 @@ pre-commit run --all-files
 # Run
 Create an `.env` file with this content or create environment variables
 ```
+LES_STATS_TFT_API_KEY="TZ database name following https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
 LES_STATS_DB_URL="Your db url following https://tortoise.github.io/databases.html"
 LES_STATS_SALT="Salt used to hash API key of internal app"
 
@@ -41,8 +46,6 @@ LES_STATS_TFT_API_KEY="tft api key"
 LES_STATS_TFT_API_ROUTING="lol api routing"
 LES_STATS_VALORANT_API_KEY="valorant api key"
 LES_STATS_VALORANT_API_ROUTING="lol api routing"
-LES_STATS_LOL_API_KEY="lol api key"
-LES_STATS_LOL_API_ROUTING="lol api routing"
 LES_STATS_APP_HOST="Application bind sotcket to this host (default 127.0.0.1)"
 LES_STATS_APP_PORT="Application bind sotcket with this port (default 8000)"
 LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default 9345)"
@@ -56,7 +59,7 @@ Start the app
 python3 -m les_stats.main
 ```
 
-Create API Key
+Manage API Key
 ```
 python3 -m les_stats.utils.auth --help
 ```

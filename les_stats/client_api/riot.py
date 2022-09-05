@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Union
 
 import httpx
@@ -177,7 +178,9 @@ class RiotAPI(ClientAPI):
                 game = await TFTGame(
                     match_id=metadata["match_id"],
                     data_version=metadata["data_version"],
-                    game_datetime=info["game_datetime"],
+                    game_datetime=datetime.datetime.utcfromtimestamp(
+                        int(str(info["game_datetime"])[:-3])
+                    ),
                     game_length=info["game_length"],
                     game_version=info["game_version"],
                     queue_id=info["queue_id"],
@@ -212,7 +215,9 @@ class RiotAPI(ClientAPI):
                         level=p["level"],
                         placement=p["placement"],
                         players_eliminated=p["players_eliminated"],
-                        time_eliminated=p["time_eliminated"],
+                        time_eliminated=datetime.datetime.utcfromtimestamp(
+                            int(str(p["time_eliminated"])[:-3])
+                        ),
                         total_damage_to_players=p["total_damage_to_players"],
                         companion=companion,
                         player=player,
@@ -270,7 +275,9 @@ class RiotAPI(ClientAPI):
                 http_code = 207
             data.append(DataResponse(data=f"Game {match.id} saved"))
 
-        metric_game.labels(self.game).inc()
+            metric_game.labels(
+                match.event, match.tournament, match.stage, self.game
+            ).inc()
         return http_code, data
 
     async def update_tft_games(
@@ -291,43 +298,6 @@ class RiotAPI(ClientAPI):
         for match in matches:
             try:
                 game = await game_type.get(match_id=match.id)
-
-                game_tags = {}
-                try:
-                    for instance, value in [
-                        (Event, match.event),
-                        (Tournament, match.tournament),
-                        (Stage, match.stage),
-                    ]:
-                        http_code, result = await self._get_game_tags(
-                            http_code, instance, value
-                        )
-                        if isinstance(result, instance):
-                            game_tags[type(result).__name__.lower()] = result
-                        elif isinstance(result, DataResponse):
-                            data.append(result)
-                            raise DoesNotExist
-                except DoesNotExist:
-                    continue
-
-                if match.event:
-                    game.event = game_tags["event"]
-                else:
-                    game.event = None
-                if match.tournament:
-                    game.tournament = game_tags["tournament"]
-                else:
-                    game.tournament = None
-                if match.stage:
-                    game.stage = game_tags["stage"]
-                else:
-                    game.stage = None
-                await game.save()
-                if http_code is None:
-                    http_code = 200
-                elif http_code != 200:
-                    http_code = 207
-                data.append(DataResponse(data=f"Game {match.id} updated"))
             except DoesNotExist:
                 if http_code is None:
                     http_code = 404
@@ -336,11 +306,55 @@ class RiotAPI(ClientAPI):
                 data.append(
                     DataResponse(
                         error=ErrorResponse(
-                            status_code=404, message=f"Game {match.id} does not exist"
+                            status_code=404, message=f"Game {match.id} not found"
                         )
                     )
                 )
                 continue
+
+            game_tags = {}
+            try:
+                for instance, value in [
+                    (Event, match.event),
+                    (Tournament, match.tournament),
+                    (Stage, match.stage),
+                ]:
+                    http_code, result = await self._get_game_tags(
+                        http_code, instance, value
+                    )
+                    if isinstance(result, instance):
+                        game_tags[type(result).__name__.lower()] = result
+                    elif isinstance(result, DataResponse):
+                        data.append(result)
+                        raise DoesNotExist
+            except DoesNotExist:
+                continue
+
+            old_event = game.event if hasattr(game, "event") else None
+            old_tournament = game.tournament if hasattr(game, "tournament") else None
+            old_stage = game.stage if hasattr(game, "stage") else None
+            if match.event:
+                game.event = game_tags["event"]
+            else:
+                game.event = None
+            if match.tournament:
+                game.tournament = game_tags["tournament"]
+            else:
+                game.tournament = None
+            if match.stage:
+                game.stage = game_tags["stage"]
+            else:
+                game.stage = None
+            await game.save()
+            if http_code is None:
+                http_code = 200
+            elif http_code != 200:
+                http_code = 207
+            data.append(DataResponse(data=f"Game {match.id} updated"))
+            metric_game.labels(self.game, old_event, old_tournament, old_stage).dec()
+            metric_game.labels(
+                self.game, match.event, match.tournament, match.stage
+            ).inc()
 
         return http_code, data
 
@@ -351,8 +365,9 @@ class RiotAPI(ClientAPI):
         data = []
 
         for match_id in matches_id:
-            deleted_count = await game_type.filter(match_id=match_id).delete()
-            if not deleted_count:
+            try:
+                game = await game_type.get(match_id=match_id)
+            except DoesNotExist:
                 if http_code is None:
                     http_code = 404
                 elif http_code != 404:
@@ -364,13 +379,17 @@ class RiotAPI(ClientAPI):
                         )
                     )
                 )
-                metric_game.labels(self.game).dec()
-            else:
-                if http_code is None:
-                    http_code = 200
-                elif http_code != 200:
-                    http_code = 207
-                data.append(DataResponse(data=f"Game {match_id} deleted"))
+                continue
+            old_event = game.event if hasattr(game, "event") else None
+            old_tournament = game.tournament if hasattr(game, "tournament") else None
+            old_stage = game.stage if hasattr(game, "stage") else None
+            await game.delete()
+            if http_code is None:
+                http_code = 200
+            elif http_code != 200:
+                http_code = 207
+            data.append(DataResponse(data=f"Game {match_id} deleted"))
+            metric_game.labels(self.game, old_event, old_tournament, old_stage).dec()
 
         return http_code, data
 
@@ -439,7 +458,6 @@ class RiotAPI(ClientAPI):
     async def get_matches_list(
         self,
         puuids: List[str],
-        host: RiotHost,
         start: int = 0,
         end_time: int = None,
         start_time: int = None,
@@ -468,7 +486,7 @@ class RiotAPI(ClientAPI):
             reqs.append(
                 self.session.build_request(
                     "GET",
-                    self.build_url(host, match_list_url),
+                    self.build_url(self.routing, match_list_url),
                     params=params,
                 )
             )
@@ -496,9 +514,7 @@ class RiotAPI(ClientAPI):
 
         return self.handle_response(await self.make_request(reqs))
 
-    async def get_ranks(
-        self, summoners_name: List[str], host: RiotHost
-    ) -> List[DataResponse]:
+    async def get_ranks(self, summoners_name: List[str]) -> List[DataResponse]:
         if self.game == RiotGame.valorant:
             raise NotImplementedError
         elif self.game == RiotGame.lol:
@@ -511,7 +527,7 @@ class RiotAPI(ClientAPI):
             reqs.append(
                 self.session.build_request(
                     "GET",
-                    self.build_url(host, f"{match_url}/{summoner_name}"),
+                    self.build_url(self.routing, f"{match_url}/{summoner_name}"),
                 )
             )
 

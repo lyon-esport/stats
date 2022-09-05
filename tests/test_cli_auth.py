@@ -21,8 +21,18 @@ from les_stats.utils.auth import (
     ),
     (
         (None, "read", 2, "Error: Missing argument 'NAME'."),
-        ("", "read", 1, "Error: Name can't be empty"),
-        ("test", "", 1, "Error: Invalid scope"),
+        (
+            "",
+            "read",
+            2,
+            "Usage: create-api-key [OPTIONS] NAME\nTry 'create-api-key --help' for help.\n\nError: Invalid value: Name can't be empty\n",
+        ),
+        (
+            "test",
+            "",
+            2,
+            "Usage: create-api-key [OPTIONS] NAME\nTry 'create-api-key --help' for help.\n\nError: Invalid value: Invalid scope\n",
+        ),
         ("test", None, 0, ""),
         ("test", "read", 0, ""),
         ("test", "write", 0, ""),
@@ -56,8 +66,16 @@ async def test_create_api_key(
     ),
     (
         (None, 2, "Error: Missing argument 'NAME'."),
-        ("", 1, "Error: Name can't be empty"),
-        ("test2", 1, "Error: NAME not found"),
+        (
+            "",
+            2,
+            "Usage: delete-api-key [OPTIONS] NAME\nTry 'delete-api-key --help' for help.\n\nError: Invalid value: NAME can't be empty\n",
+        ),
+        (
+            "test2",
+            2,
+            "Usage: delete-api-key [OPTIONS] NAME\nTry 'delete-api-key --help' for help.\n\nError: Invalid value: NAME not found\n",
+        ),
         ("test", 0, ""),
     ),
 )
@@ -73,6 +91,7 @@ async def test_delete_api_key(runner: CliRunner, name: str, rc: int, message: st
     assert result.exit_code == rc
     if rc != 0:
         assert result.exception
+        assert message in str(result.output)
     else:
         assert result.output != ""
 

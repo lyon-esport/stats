@@ -25,3 +25,8 @@ class GameSaveIn_Pydantic(BaseModel):
 
     class Config:
         title = "GameSaveIn"
+
+
+class GameInPydantic(BaseModel):
+    id: str
+    region: str

@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/",
+    "",
     response_model=Tournament_Pydantic,
     responses={409: {"model": HTTPNotFoundError}},
 )
@@ -108,7 +108,7 @@ async def get_tournament(request: Request, tournament_name: str):
         )
 
 
-@router.get("/", response_model=List[Tournament_Pydantic])
+@router.get("", response_model=List[Tournament_Pydantic])
 @scope_required([Scope.read, Scope.write])
 async def get_tournaments(request: Request):
     tournaments_obj = await Tournament.all()

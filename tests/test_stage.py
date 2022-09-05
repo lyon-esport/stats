@@ -5,7 +5,7 @@ from les_stats.models.internal.stage import Stage
 from les_stats.schemas.internal.stage import Stage_Pydantic
 from tests.utils import CustomClient
 
-NAMESPACE = "/internal/stage/"
+NAMESPACE = "/internal/stage"
 
 
 @pytest.mark.asyncio
@@ -82,7 +82,7 @@ async def test_get_stages(client: CustomClient, id: int, name: str, http_code: i
 
 @pytest.mark.asyncio
 async def test_get_stage_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}test", [Scope.read, Scope.write])
+    await client.test_api_scope("GET", f"{NAMESPACE}/test", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ async def test_get_stage(
     if create:
         await Stage.create(name=name)
 
-    response = await client.test_api("GET", f"{NAMESPACE}{name}", Scope.read)
+    response = await client.test_api("GET", f"{NAMESPACE}/{name}", Scope.read)
 
     assert response.status_code == http_code
     data = response.json()
@@ -120,7 +120,7 @@ async def test_get_stage(
 
 @pytest.mark.asyncio
 async def test_delete_stage_scopes(client: CustomClient):
-    await client.test_api_scope("DELETE", f"{NAMESPACE}test", [Scope.write])
+    await client.test_api_scope("DELETE", f"{NAMESPACE}/test", [Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -146,7 +146,7 @@ async def test_delete_stage(
     if create:
         await Stage.create(name=name)
 
-    response = await client.test_api("DELETE", f"{NAMESPACE}{name}", Scope.write)
+    response = await client.test_api("DELETE", f"{NAMESPACE}/{name}", Scope.write)
 
     assert response.status_code == http_code
     data = response.json()

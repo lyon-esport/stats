@@ -68,10 +68,10 @@ async def process_result(result, **kwargs):
 @click.argument("name")
 async def create_api_key(name: str, scope: str) -> None:
     if len(name) == 0:
-        raise click.ClickException("Name can't be empty")
+        raise click.BadParameter("Name can't be empty")
 
     if scope not in Scope.__members__:
-        raise click.ClickException("Invalid scope")
+        raise click.BadParameter("Invalid scope")
 
     alphabet = string.ascii_letters + string.digits + string.punctuation
     api_key = "".join(
@@ -100,11 +100,11 @@ async def list_api_key() -> None:
 @click.argument("name")
 async def delete_api_key(name: str) -> None:
     if len(name) == 0:
-        raise click.ClickException("NAME can't be empty")
+        raise click.BadParameter("NAME can't be empty")
 
     deleted_count = await Api.filter(name=name).delete()
     if not deleted_count:
-        raise click.ClickException("NAME not found")
+        raise click.BadParameter("NAME not found")
     else:
         click.echo("API key deleted")
 

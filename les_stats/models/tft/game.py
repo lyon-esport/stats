@@ -6,7 +6,7 @@ from les_stats.schemas.riot.game import RiotHost
 class TFTGame(models.Model):
     match_id = fields.CharField(pk=True, max_length=200)
     data_version = fields.CharField(max_length=200)
-    game_datetime = fields.IntField()
+    game_datetime = fields.DatetimeField()
     game_length = fields.FloatField()
     game_version = fields.CharField(max_length=200)
     queue_id = fields.IntField()
@@ -14,10 +14,16 @@ class TFTGame(models.Model):
     tft_game_type = fields.CharField(max_length=200)
     tft_set_core_name = fields.CharField(max_length=200, default="")
 
+    def __str__(self):
+        return self.match_id
+
 
 class TFTPlayer(models.Model):
     puuid = fields.CharField(max_length=200)
     region: RiotHost = fields.CharEnumField(RiotHost)
+
+    def __str__(self):
+        return f"region:{self.region}, puuid:{self.puuid}"
 
     class Meta:
         unique_together = ("puuid", "region")
@@ -33,14 +39,14 @@ class TFTParticipant(models.Model):
     time_eliminated = fields.FloatField()
     total_damage_to_players = fields.IntField()
     companion = fields.ForeignKeyField(
-        "models.TFTCompanion", related_name="tftparticipant"
+        "models.TFTCompanion", related_name="participant"
     )
-    player = fields.ForeignKeyField("models.TFTPlayer", related_name="tftparticipant")
-    game = fields.ForeignKeyField("models.TFTGame", related_name="tftparticipant")
+    player = fields.ForeignKeyField("models.TFTPlayer", related_name="participant")
+    game = fields.ForeignKeyField("models.TFTGame", related_name="participant")
     augments = fields.ManyToManyField(
         "models.TFTAugment",
-        related_name="tftaugments",
-        through="tftparticipant_tftaugment",
+        related_name="augments",
+        through="participant_augment",
     )
 
 
@@ -49,13 +55,22 @@ class TFTCompanion(models.Model):
     skin_id = fields.IntField()
     species = fields.CharField(max_length=200)
 
+    def __str__(self):
+        return self.content_id
+
 
 class TFTAugment(models.Model):
     name = fields.CharField(pk=True, max_length=200)
 
+    def __str__(self):
+        return self.name
+
 
 class TFTTrait(models.Model):
     name = fields.CharField(pk=True, max_length=200)
+
+    def __str__(self):
+        return self.name
 
 
 class TFTCurrentTrait(models.Model):
@@ -64,16 +79,17 @@ class TFTCurrentTrait(models.Model):
     style = fields.IntField()
     tier_current = fields.IntField()
     tier_total = fields.IntField()
-    trait = fields.ForeignKeyField(
-        "models.TFTTrait", related_name="tftcurrent_tfttrait"
-    )
+    trait = fields.ForeignKeyField("models.TFTTrait", related_name="current_trait")
     participant = fields.ForeignKeyField(
-        "models.TFTParticipant", related_name="tftcurrent_tfttrait"
+        "models.TFTParticipant", related_name="current_trait"
     )
 
 
 class TFTUnit(models.Model):
     character_id = fields.CharField(pk=True, max_length=200)
+
+    def __str__(self):
+        return self.character_id
 
 
 class TFTCurrentUnit(models.Model):
@@ -83,14 +99,18 @@ class TFTCurrentUnit(models.Model):
     rarity = fields.IntField()
     tier = fields.IntField()
     items = fields.ManyToManyField(
-        "models.TFTItem", related_name="tftitems", through="tftunit_tftitem"
+        "models.TFTItem", related_name="items", through="unit_item"
     )
-    unit = fields.ForeignKeyField("models.TFTUnit", related_name="tftcurrent_tftunit")
-    participant = fields.ForeignKeyField(
-        "models.TFTParticipant", related_name="tftunit"
-    )
+    unit = fields.ForeignKeyField("models.TFTUnit", related_name="current_unit")
+    participant = fields.ForeignKeyField("models.TFTParticipant", related_name="unit")
+
+    def __str__(self):
+        return self.name
 
 
 class TFTItem(models.Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=200, default="")
+
+    def __str__(self):
+        return self.name

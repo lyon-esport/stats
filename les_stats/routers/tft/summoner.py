@@ -11,7 +11,7 @@ from les_stats.utils.auth import scope_required
 router = APIRouter()
 
 
-@router.get("/by-puuid/", response_model=List[DataResponse])
+@router.get("/by-puuid", response_model=List[DataResponse])
 @scope_required([Scope.read, Scope.write])
 async def get_summoners_name_from_puuid(
     request: Request, response: Response, encrypted_puuid: List[str] = Query()
@@ -22,7 +22,7 @@ async def get_summoners_name_from_puuid(
     return data
 
 
-@router.get("/by-name/", response_model=List[DataResponse])
+@router.get("/by-name", response_model=List[DataResponse])
 @scope_required([Scope.read, Scope.write])
 async def get_summoners_puuid_from_name(
     request: Request, response: Response, summoner_name: List[str] = Query()

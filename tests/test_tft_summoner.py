@@ -14,7 +14,7 @@ MOCKED_DATA_FOLDER = "riot/tft/summoner/"
 @pytest.mark.asyncio
 async def test_get_summoners_by_puuid_scopes(client: CustomClient):
     await client.test_api_scope(
-        "GET", f"{NAMESPACE}by-puuid/", [Scope.read, Scope.write]
+        "GET", f"{NAMESPACE}by-puuid", [Scope.read, Scope.write]
     )
 
 
@@ -64,7 +64,7 @@ async def test_get_summoners_by_puuid(
     infos: List[Dict[str, Union[str, int]]],
     http_code: int,
 ):
-    url = f"{NAMESPACE}by-puuid/"
+    url = f"{NAMESPACE}by-puuid"
 
     for i in range(0, len(infos)):
         if i == 0:
@@ -96,9 +96,7 @@ async def test_get_summoners_by_puuid(
 
 @pytest.mark.asyncio
 async def test_get_summoners_by_name_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "GET", f"{NAMESPACE}by-name/", [Scope.read, Scope.write]
-    )
+    await client.test_api_scope("GET", f"{NAMESPACE}by-name", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -147,7 +145,7 @@ async def test_get_summoners_by_name(
     infos: List[Dict[str, Union[str, int]]],
     http_code: int,
 ):
-    url = f"{NAMESPACE}by-name/"
+    url = f"{NAMESPACE}by-name"
 
     for i in range(0, len(infos)):
         if i == 0:

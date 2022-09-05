@@ -8,7 +8,7 @@ from les_stats.schemas.internal.tournament import (
 )
 from tests.utils import CustomClient
 
-NAMESPACE = "/internal/tournament/"
+NAMESPACE = "/internal/tournament"
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_get_tournaments(
 
 @pytest.mark.asyncio
 async def test_get_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}test", [Scope.read, Scope.write])
+    await client.test_api_scope("GET", f"{NAMESPACE}/test", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -137,7 +137,7 @@ async def test_get_tournament(
     if create:
         await Tournament.create(name=name)
 
-    response = await client.test_api("GET", f"{NAMESPACE}{name}", Scope.read)
+    response = await client.test_api("GET", f"{NAMESPACE}/{name}", Scope.read)
 
     assert response.status_code == http_code
     data = response.json()
@@ -149,7 +149,7 @@ async def test_get_tournament(
 
 @pytest.mark.asyncio
 async def test_delete_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("DELETE", f"{NAMESPACE}test", [Scope.write])
+    await client.test_api_scope("DELETE", f"{NAMESPACE}/test", [Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -175,7 +175,7 @@ async def test_delete_tournament(
     if create:
         await Tournament.create(name=name)
 
-    response = await client.test_api("DELETE", f"{NAMESPACE}{name}", Scope.write)
+    response = await client.test_api("DELETE", f"{NAMESPACE}/{name}", Scope.write)
 
     assert response.status_code == http_code
     data = response.json()
@@ -187,7 +187,7 @@ async def test_delete_tournament(
 
 @pytest.mark.asyncio
 async def test_put_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("PUT", f"{NAMESPACE}test", [Scope.write], json={})
+    await client.test_api_scope("PUT", f"{NAMESPACE}/test", [Scope.write], json={})
 
 
 @pytest.mark.parametrize(
@@ -230,7 +230,7 @@ async def test_put_tournaments(
         await Tournament.create(name=name)
 
     response = await client.test_api(
-        "PUT", f"{NAMESPACE}{name}", Scope.write, json=j_data
+        "PUT", f"{NAMESPACE}/{name}", Scope.write, json=j_data
     )
 
     assert response.status_code == http_code

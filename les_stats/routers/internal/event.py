@@ -21,7 +21,7 @@ from les_stats.utils.status import Status
 router = APIRouter()
 
 
-@router.post("/", response_model=None)
+@router.post("", response_model=None)
 @scope_required([Scope.write])
 async def add_event(request: Request, event: Event_Pydantic):
     async with in_transaction("default") as connection:
@@ -111,7 +111,7 @@ async def get_event(request: Request, event_name: str):
         raise HTTPException(status_code=404, detail=f"Event {event_name} not found")
 
 
-@router.get("/", response_model=List[Event_Pydantic])
+@router.get("", response_model=List[Event_Pydantic])
 @scope_required([Scope.read, Scope.write])
 async def get_events(request: Request):
     events_obj = await Event.all()
