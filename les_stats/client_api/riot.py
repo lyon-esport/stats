@@ -10,7 +10,6 @@ from les_stats.metrics.internal.metrics import metric_game
 from les_stats.models.internal.event import Event
 from les_stats.models.internal.stage import Stage
 from les_stats.models.internal.tournament import Tournament
-from les_stats.models.lol.game import LOLGame
 from les_stats.models.tft.game import (
     TFTAugment,
     TFTCompanion,
@@ -113,10 +112,10 @@ class RiotAPI(ClientAPI):
     async def update_lol_games(
         self, matches: List[GameSaveIn_Pydantic]
     ) -> List[DataResponse]:
-        return await self._update_games(matches, LOLGame)
+        raise NotImplementedError
 
     async def delete_lol_games(self, matches_id: List[str]) -> List[DataResponse]:
-        return await self._delete_games(matches_id, LOLGame)
+        raise NotImplementedError
 
     async def save_tft_games(
         self, matches: List[GameSaveIn_Pydantic]
@@ -215,9 +214,7 @@ class RiotAPI(ClientAPI):
                         level=p["level"],
                         placement=p["placement"],
                         players_eliminated=p["players_eliminated"],
-                        time_eliminated=datetime.datetime.utcfromtimestamp(
-                            int(str(p["time_eliminated"])[:-3])
-                        ),
+                        time_eliminated=p["time_eliminated"],
                         total_damage_to_players=p["total_damage_to_players"],
                         companion=companion,
                         player=player,
@@ -291,7 +288,7 @@ class RiotAPI(ClientAPI):
     async def _update_games(
         self,
         matches: List[GameSaveIn_Pydantic],
-        game_type: Union[TFTGame, ValorantGame, LOLGame],
+        game_type: Union[TFTGame, ValorantGame],
     ) -> List[DataResponse]:
         http_code = None
         data = []
@@ -359,7 +356,7 @@ class RiotAPI(ClientAPI):
         return http_code, data
 
     async def _delete_games(
-        self, matches_id: List[str], game_type: Union[TFTGame, ValorantGame, LOLGame]
+        self, matches_id: List[str], game_type: Union[TFTGame, ValorantGame]
     ) -> List[DataResponse]:
         http_code = None
         data = []

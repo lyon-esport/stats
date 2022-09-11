@@ -37,7 +37,7 @@ pre-commit run --all-files
 # Run
 Create an `.env` file with this content or create environment variables
 ```
-LES_STATS_TFT_API_KEY="TZ database name following https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+LES_STATS_TIMEZONE="TZ database name following https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
 LES_STATS_DB_URL="Your db url following https://tortoise.github.io/databases.html"
 LES_STATS_SALT="Salt used to hash API key of internal app"
 
