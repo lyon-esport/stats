@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 from prometheus_client import start_http_server
+from pyot.conf.utils import import_confs
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from tortoise.contrib.fastapi import register_tortoise
@@ -71,6 +72,10 @@ if __name__ == "__main__":
         modules={"models": ["les_stats.models"]},
         generate_schemas=True,
     )
+
+    @app.on_event("startup")
+    async def startup_tasks():
+        import_confs("les_stats.utils.pyot_config")
 
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html():

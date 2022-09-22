@@ -16,6 +16,11 @@ from les_stats.models.tft.game import (
     TFTTrait,
     TFTUnit,
 )
-from les_stats.models.valorant.game import ValorantGame
+from les_stats.models.valorant.game import (
+    ValorantCharacter,
+    ValorantGame,
+    ValorantPlayer,
+    ValorantTeam,
+)
 
 Tortoise.init_models(["les_stats.models"], "models")
