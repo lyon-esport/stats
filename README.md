@@ -19,7 +19,7 @@ Install [Poetry](https://python-poetry.org/docs/master/#installing-with-the-offi
 
 Install and setup dependencies
 ```
-poetry install
+poetry install --with dev
 poetry shell
 pre-commit install
 ```
