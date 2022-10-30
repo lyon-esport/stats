@@ -2,10 +2,11 @@
 # author Etienne G.
 
 import logging
-import os
 
 from pyot.conf.model import ModelConf, activate_model
 from pyot.conf.pipeline import PipelineConf, activate_pipeline
+
+from les_stats.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,6 @@ class ValPipeline(PipelineConf):
         # },
         {
             "backend": "pyot.stores.riotapi.RiotAPI",
-            "api_key": os.environ["LES_STATS_VALORANT_API_KEY"],
+            "api_key": get_settings().VALORANT_API_KEY,
         },
     ]
