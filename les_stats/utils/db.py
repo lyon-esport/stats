@@ -3,6 +3,8 @@ from typing import List
 import asyncclick as click
 from tortoise import Tortoise
 
+from les_stats.models.valorant.game import ValorantArmor, ValorantWeapon
+from les_stats.routers.valorant.utils import insert_match_data
 from les_stats.utils.config import get_settings
 
 
@@ -29,8 +31,7 @@ async def process_result(result, **kwargs):
 
 
 @click.command()
-@click.argument("type")
-async def load_valorant_data(type: str) -> None:
+async def load_valorant_data() -> None:
     from pyot.conf.utils import import_confs
 
     from ..models.valorant.game import ValorantCharacter
@@ -43,9 +44,17 @@ async def load_valorant_data(type: str) -> None:
     for character in content.characters:
         char_id = character.id.lower()
         name = character.name
-        await ValorantCharacter.update_or_create(
-            character_id=char_id, defaults={"name": name}
-        )
+        await ValorantCharacter.update_or_create(id=char_id, defaults={"name": name})
+    for equip in content.equips:
+        char_id = equip.id.lower()
+        name = equip.name
+        await ValorantWeapon.update_or_create(id=char_id, defaults={"name": name})
+        await ValorantArmor.update_or_create(id=char_id, defaults={"name": name})
+
+    for character in content.characters:
+        char_id = character.id.lower()
+        name = character.name
+        await ValorantCharacter.update_or_create(id=char_id, defaults={"name": name})
 
 
 @click.command()
@@ -77,7 +86,7 @@ async def load_match(game_name: str, tag: str) -> None:
     from pyot.conf.utils import import_confs
     from pyot.core.queue import Queue
 
-    from ..models.valorant.game import ValorantGame, ValorantPlayer, ValorantTeam
+    from ..models.valorant.game import ValorantPlayer
 
     import_confs("les_stats.utils.pyot_config")
     from pyot.models import riot, val
@@ -98,30 +107,7 @@ async def load_match(game_name: str, tag: str) -> None:
         first_10_matches: List[val.Match] = await queue.join()
 
     for match in first_10_matches:
-        match_db, _ = await ValorantGame.update_or_create(
-            match_id=match.id,
-            defaults={
-                "start_time": match.start_time,
-                "length": match.info.length.total_seconds(),
-                "map_url": match.info.map_url,
-                "is_completed": match.info.is_completed,
-                "game_mode": match.info.game_mode,
-            },
-        )
-
-        for participant in match.players:
-            account = await participant.account.get()
-
-            player, _ = await ValorantPlayer.get_or_create(
-                puuid=account.puuid,
-                defaults={"game_name": account.game_name, "tag_line": account.tag_line},
-            )
-            print(participant.team_id)
-            if participant.team_id not in ("Red", "Blue"):
-                continue
-            await ValorantTeam.get_or_create(
-                game=match_db, player=player, defaults={"team": participant.team_id}
-            )
+        await insert_match_data(match)
 
 
 db.add_command(load_valorant_data)

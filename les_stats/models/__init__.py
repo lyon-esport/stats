@@ -17,10 +17,17 @@ from les_stats.models.tft.game import (
     TFTUnit,
 )
 from les_stats.models.valorant.game import (
+    KillAssist,
+    ValorantArmor,
     ValorantCharacter,
     ValorantGame,
+    ValorantGameRound,
+    ValorantLocationData,
     ValorantPlayer,
-    ValorantTeam,
+    ValorantPlayerRoundKill,
+    ValorantPlayerRoundStat,
+    ValorantTeamPlayer,
+    ValorantWeapon,
 )
 
 Tortoise.init_models(["les_stats.models"], "models")
