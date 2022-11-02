@@ -31,3 +31,14 @@ async def get_summoners_puuid_from_name(
         summoner_name
     )
     return data
+
+
+@router.get("/rank", response_model=List[DataResponse])
+@scope_required([Scope.read, Scope.write])
+async def get_summoners_rank(
+    request: Request, response: Response, summoner_id: List[str] = Query()
+):
+    response.status_code, data = await RiotAPI(RiotGame.tft).get_summoners_rank(
+        summoner_id
+    )
+    return data
