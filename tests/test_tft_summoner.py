@@ -173,3 +173,84 @@ async def test_get_summoners_by_name(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
+
+
+@pytest.mark.asyncio
+async def test_get_summoners_rank_scopes(client: CustomClient):
+    await client.test_api_scope("GET", f"{NAMESPACE}rank", [Scope.read, Scope.write])
+
+
+@pytest.mark.parametrize(
+    (
+        "infos",
+        "http_code",
+    ),
+    (
+        (
+            [
+                {
+                    "summoner_id": "0WjTGzOhQKB8AmejAbqsEEcZPAS8VGclP1-bpNWCVtgUHfz_oP-wksui4w",
+                    "http_code": 200,
+                },
+            ],
+            200,
+        ),
+        (
+            [
+                {
+                    "summoner_id": "0WjTGzOhQKB8AmejAbqsEEcZPAS8VGclP1-bpNWCVtgUHfz_oP-wksui4wNotExist",
+                    "http_code": 400,
+                },
+            ],
+            400,
+        ),
+        (
+            [
+                {
+                    "summoner_id": "0WjTGzOhQKB8AmejAbqsEEcZPAS8VGclP1-bpNWCVtgUHfz_oP-wksui4w",
+                    "http_code": 200,
+                },
+                {
+                    "summoner_id": "0WjTGzOhQKB8AmejAbqsEEcZPAS8VGclP1-bpNWCVtgUHfz_oP-wksui4wNotExist",
+                    "http_code": 400,
+                },
+            ],
+            207,
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_get_summoners_rank(
+    client: CustomClient,
+    httpx_mock: HTTPXMock,
+    infos: List[Dict[str, Union[str, int]]],
+    http_code: int,
+):
+    url = f"{NAMESPACE}rank"
+
+    for i in range(0, len(infos)):
+        if i == 0:
+            url = f"{url}?summoner_id={infos[i]['summoner_id']}"
+        else:
+            url = f"{url}&summoner_id={infos[i]['summoner_id']}"
+
+        httpx_mock.add_response(
+            method="GET",
+            url=f"https://euw1.api.riotgames.com/tft/league/v1/entries/by-summoner/{infos[i]['summoner_id']}",
+            status_code=infos[i]["http_code"],
+            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['summoner_id']}"),
+        )
+
+    response = await client.test_api("GET", url, Scope.read)
+
+    assert response.status_code == http_code
+    datas = response.json()
+
+    for i in range(0, len(infos)):
+        if httpx.codes.is_success(infos[i]["http_code"]):
+            assert datas[i]["error"] is None
+            assert datas[i]["data"] is not None
+        else:
+            assert datas[i]["data"] is None
+            assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
+            assert datas[i]["error"]["message"] is not None

@@ -13,6 +13,15 @@ class TFTGame(models.Model):
     tft_set_number = fields.IntField()
     tft_game_type = fields.CharField(max_length=200)
     tft_set_core_name = fields.CharField(max_length=200, default="")
+    event = fields.ForeignKeyField(
+        "models.Event", related_name="event", on_delete="CASCADE", null=True
+    )
+    tournament = fields.ForeignKeyField(
+        "models.Tournament", related_name="tournament", on_delete="CASCADE", null=True
+    )
+    stage = fields.ForeignKeyField(
+        "models.Stage", related_name="stage", on_delete="CASCADE", null=True
+    )
 
     def __str__(self):
         return self.match_id
@@ -49,6 +58,9 @@ class TFTParticipant(models.Model):
         through="participant_augment",
     )
 
+    def __str__(self):
+        return self.id
+
 
 class TFTCompanion(models.Model):
     content_id = fields.CharField(pk=True, max_length=200)
@@ -83,6 +95,9 @@ class TFTCurrentTrait(models.Model):
     participant = fields.ForeignKeyField(
         "models.TFTParticipant", related_name="current_trait"
     )
+
+    def __str__(self):
+        return self.id
 
 
 class TFTUnit(models.Model):

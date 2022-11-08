@@ -20,14 +20,14 @@ class Settings(BaseSettings):
     SENTRY_DSN: Optional[HttpUrl] = ""
 
     @validator("APP_PORT", "EXPORTER_PORT", pre=True, allow_reuse=True)
-    def check_port_is_valid(cls, v: str):
+    def check_port_is_valid(cls, v: str) -> int:
         v = int(v)
         if not 1 <= v <= 65535:
             return ValueError(v)
         return v
 
     @validator("TIMEZONE", pre=True)
-    def check_timezone_is_valid(cls, v: str):
+    def check_timezone_is_valid(cls, v: str) -> str:
         if v not in pytz.all_timezones:
             raise ValueError("Invalid timezone")
         return v

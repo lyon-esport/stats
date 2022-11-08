@@ -511,7 +511,7 @@ class RiotAPI(ClientAPI):
 
         return self.handle_response(await self.make_request(reqs))
 
-    async def get_ranks(self, summoners_name: List[str]) -> List[DataResponse]:
+    async def get_summoners_rank(self, summoners_id: List[str]) -> List[DataResponse]:
         if self.game == RiotGame.valorant:
             raise NotImplementedError
         elif self.game == RiotGame.lol:
@@ -520,11 +520,11 @@ class RiotAPI(ClientAPI):
             match_url = f"/{self.game}/league/v1/entries/by-summoner"
 
         reqs = []
-        for summoner_name in summoners_name:
+        for summoner_id in summoners_id:
             reqs.append(
                 self.session.build_request(
                     "GET",
-                    self.build_url(self.routing, f"{match_url}/{summoner_name}"),
+                    self.build_url(self.routing, f"{match_url}/{summoner_id}"),
                 )
             )
 
