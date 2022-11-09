@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Union
 
 import httpx
@@ -17,11 +18,24 @@ NAMESPACE = "/tft/game/"
 MOCKED_DATA_FOLDER = "riot/tft/match/"
 
 
+@pytest.mark.parametrize(
+    ("method", "endpoint", "json", "scopes"),
+    (
+        ("GET", "match-list", {}, [Scope.write, Scope.read]),
+        ("GET", "matches/save", {}, [Scope.write, Scope.read]),
+        ("PUT", "matches/save", [{"id": "test"}], [Scope.write]),
+        ("DELETE", "matches/save", ["test"], [Scope.write]),
+    ),
+)
 @pytest.mark.asyncio
-async def test_get_matches_from_summoners_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "GET", f"{NAMESPACE}match-list", [Scope.read, Scope.write]
-    )
+async def test_generic_scopes(
+    client: CustomClient,
+    method: str,
+    endpoint: str,
+    json: Dict[str, str],
+    scopes: Union[Scope.write, Scope.read],
+):
+    await client.test_api_scope(method, f"{NAMESPACE}{endpoint}", scopes, json=json)
 
 
 @pytest.mark.parametrize(
@@ -92,9 +106,9 @@ async def test_get_matches_from_summoners(
 ):
     url = f"{NAMESPACE}match-list?start={start}&count={count}"
     if end_time:
-        url = f"{url}?end_time={end_time}"
+        url = f"{url}&end_time={end_time}"
     if start_time:
-        url = f"{url}?start_time={start_time}"
+        url = f"{url}&start_time={start_time}"
 
     for i in range(0, len(infos)):
         url = f"{url}&puuid={infos[i]['puuid']}"
@@ -107,7 +121,9 @@ async def test_get_matches_from_summoners(
             method="GET",
             url=mocked_url,
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['puuid']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["puuid"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -123,13 +139,6 @@ async def test_get_matches_from_summoners(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_get_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "GET", f"{NAMESPACE}match-list", [Scope.read, Scope.write]
-    )
 
 
 @pytest.mark.parametrize(
@@ -202,7 +211,9 @@ async def test_get_matches(
             method="GET",
             url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['match_id']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -226,7 +237,9 @@ async def test_save_matches_scopes(client: CustomClient, httpx_mock: HTTPXMock):
         method="GET",
         url=f"https://{RiotAPI.get_region('EUW1_5979031153')}.api.riotgames.com/tft/match/v1/matches/EUW1_5979031153",
         status_code=200,
-        json=get_json_response(f"{MOCKED_DATA_FOLDER}EUW1_5979031153"),
+        json=get_json_response(
+            os.path.join(MOCKED_DATA_FOLDER, "EUW1_5979031153.json")
+        ),
     )
     await client.test_api_scope(
         "POST",
@@ -379,7 +392,9 @@ async def test_save_matches(
                 method="GET",
                 url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
                 status_code=infos[i]["http_code"],
-                json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['match_id']}"),
+                json=get_json_response(
+                    os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+                ),
             )
 
     response = await client.test_api(
@@ -397,13 +412,6 @@ async def test_save_matches(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_update_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "PUT", f"{NAMESPACE}matches/save", [Scope.write], json=[{"id": "test"}]
-    )
 
 
 @pytest.mark.parametrize(
@@ -570,13 +578,6 @@ async def test_update_matches(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_delete_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "DELETE", f"{NAMESPACE}matches/save", [Scope.write], json=["test"]
-    )
 
 
 @pytest.mark.parametrize(

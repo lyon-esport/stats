@@ -1,6 +1,6 @@
-from typing import List, Optional, Union
+from typing import Optional
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from tortoise.exceptions import DoesNotExist
 from tortoise.functions import Avg as TAvg
 from tortoise.functions import Count as TCount
@@ -10,22 +10,22 @@ from tortoise.functions import Sum as TSum
 
 from les_stats.models.internal.auth import Scope
 from les_stats.models.tft.game import TFTGame, TFTItem, TFTPlayer, TFTTrait, TFTUnit
-from les_stats.schemas.client_api.data import ErrorResponse
-from les_stats.schemas.internal.generic import GameTimeElapsed
+from les_stats.schemas.internal.generic import TimeElapsed
+from les_stats.schemas.riot.game import RiotHost
 from les_stats.schemas.tft.stat import (
     DeathRound,
     DeathRoundResponse,
     GameDamage,
-    GameDamageRanks,
     GameDamageResponse,
-    GameTime,
-    GameTimeResponse,
+    GamesDamage,
+    GamesDamageRanks,
+    GamesDamageResponse,
+    GamesTime,
+    GamesTimeResponse,
     PlayerKill,
     PlayerKillResponse,
     PlayerPlacement,
     PlayerPlacementResponse,
-    RankingDamage,
-    RankingDamageResponse,
     TierListComposition,
     TierListCompositionRanks,
     TierListCompositionResponse,
@@ -46,7 +46,7 @@ router = APIRouter()
 
 @router.get(
     "/tier-list/composition",
-    response_model=Union[TierListCompositionResponse, ErrorResponse],
+    response_model=TierListCompositionResponse,
 )
 @scope_required([Scope.read, Scope.write])
 async def get_tier_list_composition(
@@ -61,8 +61,6 @@ async def get_tier_list_composition(
             await TFTTrait.all()
             .prefetch_related(
                 "current_trait",
-                "current_trait__participant",
-                "current_trait__participant__game",
             )
             .filter(
                 current_trait__tier_current__gt=0,
@@ -139,17 +137,11 @@ async def get_tier_list_composition(
 
         data = TierListCompositionResponse(data=TierListCompositionRanks(**tiers))
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code, message="No games found in stat system"
-        )
-
+        raise HTTPException(status_code=404, detail="No games found in stat system")
     return data
 
 
-@router.get(
-    "/tier-list/item", response_model=Union[TierListItemResponse, ErrorResponse]
-)
+@router.get("/tier-list/item", response_model=TierListItemResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_tier_list_item(
     request: Request,
@@ -161,48 +153,45 @@ async def get_tier_list_item(
     try:
         items = (
             await TFTItem.all()
-            .prefetch_related("items", "items__participant", "items__participant__game")
+            .prefetch_related("items")
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="items__participant__game__"
                 )
             )
-            .annotate(
-                min_tier_list_item=TMin("items"),
-                avg_tier_list_item=TAvg("items"),
-                max_tier_list_item=TMax("items"),
-                sum_tier_list_item=TSum("items"),
-            )
+            .exclude(items__id=None)
         )
 
         if len(items) == 0:
             raise DoesNotExist
 
-        total = 0
-        avgs = []
-        min = {"name": items[0].name, "count": items[0].min_tier_list_item}
-        max = {"name": items[0].name, "count": items[0].max_tier_list_item}
+        total = len(items)
+        nb_items = await items[0].items.all().count()
+        min = {"id": items[0].id, "name": items[0].name, "count": nb_items}
+        max = {"id": items[0].id, "name": items[0].name, "count": nb_items}
 
         for item in items:
-            total += item.sum_tier_list_item
-            avgs.append({"avg": item.avg_tier_list_item, "weight": len(item.items)})
+            nb_items = await item.items.all().count()
 
-            if min["count"] > item.min_tier_list_item:
+            if min["count"] > nb_items:
+                min["id"] = item.id
                 min["name"] = item.name
-                min["count"] = item.min_tier_list_item
+                min["count"] = nb_items
 
-            if max["count"] < item.max_tier_list_item:
+            if max["count"] < nb_items:
+                max["id"] = item.id
                 max["name"] = item.name
-                max["count"] = item.max_tier_list_item
+                max["count"] = nb_items
 
         data = TierListItemResponse(
             data=TierListItemRanks(
                 min=TierListItem(
+                    id=min["id"],
                     name=min["name"],
                     count=min["count"],
                 ),
-                avg=sum((avg["weight"] / len(avgs) * avg["avg"]) for avg in avgs),
                 max=TierListItem(
+                    id=max["id"],
                     name=max["name"],
                     count=max["count"],
                 ),
@@ -210,17 +199,12 @@ async def get_tier_list_item(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code, message="No games found in stat system"
-        )
+        raise HTTPException(status_code=404, detail="No games found in stat system")
 
     return data
 
 
-@router.get(
-    "/tier-list/unit", response_model=Union[TierListUnitResponse, ErrorResponse]
-)
+@router.get("/tier-list/unit", response_model=TierListUnitResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_tier_list_unit(
     request: Request,
@@ -234,14 +218,13 @@ async def get_tier_list_unit(
             await TFTUnit.all()
             .prefetch_related(
                 "current_unit",
-                "current_unit__participant",
-                "current_unit__participant__game",
             )
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="current_unit__participant__game__"
                 )
             )
+            .exclude(current_unit=None)
             .group_by("character_id", "current_unit__tier")
             .annotate(count_tier_list_unit=TCount("current_unit__tier"))
             .values("character_id", "current_unit__tier", "count_tier_list_unit")
@@ -308,23 +291,18 @@ async def get_tier_list_unit(
 
         data = TierListUnitResponse(data=TierListUnitRanks(**tiers))
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code, message="No games found in stat system"
-        )
+        raise HTTPException(status_code=404, detail="No games found in stat system")
 
     return data
 
 
-@router.get(
-    "/player/placement", response_model=Union[PlayerPlacementResponse, ErrorResponse]
-)
+@router.get("/player/{puuid}/placement", response_model=PlayerPlacementResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_player_placement(
     request: Request,
     response: Response,
     puuid: str,
-    region: str,
+    region: RiotHost,
     event: Optional[str] = None,
     tournament: Optional[str] = None,
     stage: Optional[str] = None,
@@ -332,7 +310,7 @@ async def get_player_placement(
     try:
         player = (
             await TFTPlayer.get(puuid=puuid, region=region)
-            .prefetch_related("participant", "participant__game")
+            .prefetch_related("participant")
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="participant__game__"
@@ -353,22 +331,21 @@ async def get_player_placement(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code,
-            message=f"Player {puuid} from region {region} not found in stat system",
+        raise HTTPException(
+            status_code=404,
+            detail=f"Player {puuid} from region {region} not found in stat system",
         )
 
     return data
 
 
-@router.get("/player/kill", response_model=Union[PlayerKillResponse, ErrorResponse])
+@router.get("/player/{puuid}/kill", response_model=PlayerKillResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_player_kill(
     request: Request,
     response: Response,
     puuid: str,
-    region: str,
+    region: RiotHost,
     event: Optional[str] = None,
     tournament: Optional[str] = None,
     stage: Optional[str] = None,
@@ -376,7 +353,7 @@ async def get_player_kill(
     try:
         player = (
             await TFTPlayer.get(puuid=puuid, region=region)
-            .prefetch_related("participant", "participant__game")
+            .prefetch_related("participant")
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="participant__game__"
@@ -399,24 +376,21 @@ async def get_player_kill(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code,
-            message=f"Player {puuid} from region {region} not found in stat system",
+        raise HTTPException(
+            status_code=404,
+            detail=f"Player {puuid} from region {region} not found in stat system",
         )
 
     return data
 
 
-@router.get(
-    "/player/death_round", response_model=Union[DeathRoundResponse, ErrorResponse]
-)
+@router.get("/player/{puuid}/death-round", response_model=DeathRoundResponse)
 @scope_required([Scope.read, Scope.write])
-async def get_games_death_round(
+async def get_player_death_round(
     request: Request,
     response: Response,
     puuid: str,
-    region: str,
+    region: RiotHost,
     event: Optional[str] = None,
     tournament: Optional[str] = None,
     stage: Optional[str] = None,
@@ -424,7 +398,7 @@ async def get_games_death_round(
     try:
         player = (
             await TFTPlayer.get(puuid=puuid, region=region)
-            .prefetch_related("participant", "participant__game")
+            .prefetch_related("participant")
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="participant__game__"
@@ -445,16 +419,15 @@ async def get_games_death_round(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code,
-            message=f"Player {puuid} from region {region} not found in stat system",
+        raise HTTPException(
+            status_code=404,
+            detail=f"Player {puuid} from region {region} not found in stat system",
         )
 
     return data
 
 
-@router.get("/games/damage", response_model=Union[GameDamageResponse, ErrorResponse])
+@router.get("/games/damage", response_model=GamesDamageResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_games_damage(
     request: Request,
@@ -466,12 +439,13 @@ async def get_games_damage(
     try:
         players = (
             await TFTPlayer.all()
-            .prefetch_related("participant", "participant__game")
+            .prefetch_related("participant")
             .filter(
                 **generate_kwargs_structure(
                     event, tournament, stage, prefix="participant__game__"
                 )
             )
+            .exclude(participant=None)
             .annotate(
                 min_total_damage_to_players=TMin(
                     "participant__total_damage_to_players"
@@ -519,14 +493,14 @@ async def get_games_damage(
                 max["puuid"] = player.puuid
                 max["damage"] = player.max_total_damage_to_players
 
-        data = GameDamageResponse(
-            data=GameDamageRanks(
-                min=GameDamage(
+        data = GamesDamageResponse(
+            data=GamesDamageRanks(
+                min=GamesDamage(
                     puuid=min["puuid"],
                     damage=min["damage"],
                 ),
                 avg=sum((avg["weight"] / len(avgs) * avg["avg"]) for avg in avgs),
-                max=GameDamage(
+                max=GamesDamage(
                     puuid=max["puuid"],
                     damage=max["damage"],
                 ),
@@ -534,15 +508,12 @@ async def get_games_damage(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code, message="No games found in stat system"
-        )
+        raise HTTPException(status_code=404, detail="No games found in stat system")
 
     return data
 
 
-@router.get("/games/time", response_model=Union[GameTimeResponse, ErrorResponse])
+@router.get("/games/time", response_model=GamesTimeResponse)
 @scope_required([Scope.read, Scope.write])
 async def get_games_time(
     request: Request,
@@ -553,7 +524,8 @@ async def get_games_time(
 ):
     try:
         game = (
-            await TFTGame.filter(**generate_kwargs_structure(event, tournament, stage))
+            await TFTGame.all()
+            .filter(**generate_kwargs_structure(event, tournament, stage))
             .annotate(
                 min_game_length=TMin("game_length"),
                 avg_game_length=TAvg("game_length"),
@@ -563,7 +535,7 @@ async def get_games_time(
             .first()
         )
 
-        if game.min_game_length is None:
+        if game.game_length is None:
             raise DoesNotExist
 
         time_elapsed = {}
@@ -571,14 +543,15 @@ async def get_games_time(
             ("min_time", game.min_game_length),
             ("avg_time", game.avg_game_length),
             ("max_time", game.max_game_length),
+            ("sum_time", game.sum_game_length),
         ]:
             mm, ss = divmod(game_time_elapsed, 60)
             hh, mm = divmod(mm, 60)
             dd, hh = divmod(hh, 24)
-            time_elapsed[stat] = GameTimeElapsed(second=ss, minute=mm, hour=hh, day=dd)
+            time_elapsed[stat] = TimeElapsed(second=ss, minute=mm, hour=hh, day=dd)
 
-        data = GameTimeResponse(
-            data=GameTime(
+        data = GamesTimeResponse(
+            data=GamesTime(
                 min_time=time_elapsed["min_time"],
                 avg_time=time_elapsed["avg_time"],
                 max_time=time_elapsed["max_time"],
@@ -586,42 +559,36 @@ async def get_games_time(
             )
         )
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=response.status_code, message="No games found in stat system"
-        )
+        raise HTTPException(status_code=404, detail="No games found in stat system")
 
     return data
 
 
 @router.get(
-    "/game/ranking/damage",
-    response_model=Union[List[RankingDamageResponse], ErrorResponse],
+    "/game/{match_id}/damage",
+    response_model=GameDamageResponse,
 )
 @scope_required([Scope.read, Scope.write])
-async def get_game_ranking_damage(request: Request, response: Response, match_id: str):
-    data = []
-
+async def get_game_damage(request: Request, response: Response, match_id: str):
     try:
         game = await TFTGame.get(match_id=match_id).prefetch_related("participant")
         participants = await game.participant.order_by(
             "-total_damage_to_players"
         ).prefetch_related("player")
 
-        for i in range(0, participants):
-            data.append(
-                RankingDamageResponse(
-                    data=RankingDamage(
-                        puuid=participants[i].puuid,
-                        damage=participants[i].total_damage_to_players,
-                    ),
+        damages = []
+        for i in range(0, len(participants)):
+            damages.append(
+                GameDamage(
+                    puuid=participants[i].player.puuid,
+                    damage=participants[i].total_damage_to_players,
                 )
             )
+        data = GameDamageResponse(data=damages)
 
     except DoesNotExist:
-        response.status_code = 404
-        data = ErrorResponse(
-            status_code=404, message=f"Game {match_id} not found in stat system"
+        raise HTTPException(
+            status_code=404, detail=f"Game {match_id} not found in stat system"
         )
 
     return data

@@ -1,4 +1,6 @@
 import json
+import os
+import re
 from typing import Any, Dict, List
 
 from fastapi.testclient import TestClient
@@ -16,13 +18,12 @@ class CustomClient(TestClient):
         ]
         for allowed_scope in allowed_scopes_values:
             api_key = ("a" * API_KEY_SIZE_MAX)[: -len(allowed_scope)] + allowed_scope
-            await Api.create(
+            await Api.get_or_create(
                 name=f"TEST_SCOPE_{allowed_scope}",
                 scope=allowed_scope,
                 api_key=get_digest(api_key),
             )
             r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
-            print(r.text)
             assert r.status_code != 403
 
         for not_allowed_scope in list(
@@ -31,7 +32,7 @@ class CustomClient(TestClient):
             api_key = ("a" * API_KEY_SIZE_MAX)[
                 : -len(not_allowed_scope)
             ] + not_allowed_scope
-            await Api.create(
+            await Api.get_or_create(
                 name=f"TEST_SCOPE_{not_allowed_scope}",
                 scope=not_allowed_scope,
                 api_key=get_digest(api_key),
@@ -51,5 +52,6 @@ class CustomClient(TestClient):
 
 
 def get_json_response(filename: str) -> Dict[Any, Any]:
-    with open(f"tests/mocked_data/{filename}.json", "r") as f:
+    filename = re.sub("{.*}", "", filename)
+    with open(os.path.join("tests/mocked_data/", filename), "r") as f:
         return json.loads(f.read())

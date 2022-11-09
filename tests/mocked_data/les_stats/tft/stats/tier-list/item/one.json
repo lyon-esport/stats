@@ -1,0 +1,16 @@
+{
+  "data": {
+    "min": {
+      "id": 3,
+      "name": "",
+      "count": 1
+    },
+    "max": {
+      "id": 19,
+      "name": "",
+      "count": 8
+    },
+    "sum": 68
+  },
+  "error": null
+}

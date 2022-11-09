@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import httpx
 from tortoise.exceptions import DoesNotExist
@@ -392,7 +392,7 @@ class RiotAPI(ClientAPI):
 
     async def get_summoners_name(
         self, encrypted_puuids: List[str]
-    ) -> List[DataResponse]:
+    ) -> Tuple[int, List[DataResponse]]:
         reqs = []
         for encrypted_puuid in encrypted_puuids:
             match_list_url = ""
@@ -423,7 +423,7 @@ class RiotAPI(ClientAPI):
 
     async def get_summoners_puuid(
         self, summoners_name: List[str]
-    ) -> List[DataResponse]:
+    ) -> Tuple[int, List[DataResponse]]:
         reqs = []
         for summoner_name in summoners_name:
             match_list_url = ""
@@ -490,7 +490,9 @@ class RiotAPI(ClientAPI):
 
         return self.handle_response(await self.make_request(reqs))
 
-    async def get_matches(self, matches_id: List[str]) -> List[DataResponse]:
+    async def get_matches(
+        self, matches_id: List[str]
+    ) -> Tuple[int, List[DataResponse]]:
         if self.game == RiotGame.valorant:
             match_url = f"/{self.game}/match/v1/matches"
         elif self.game == RiotGame.lol:
@@ -511,7 +513,9 @@ class RiotAPI(ClientAPI):
 
         return self.handle_response(await self.make_request(reqs))
 
-    async def get_summoners_rank(self, summoners_id: List[str]) -> List[DataResponse]:
+    async def get_summoners_rank(
+        self, summoners_id: List[str]
+    ) -> Tuple[int, List[DataResponse]]:
         if self.game == RiotGame.valorant:
             raise NotImplementedError
         elif self.game == RiotGame.lol:

@@ -128,4 +128,4 @@ class TFTItem(models.Model):
     name = fields.CharField(max_length=200, default="")
 
     def __str__(self):
-        return self.name
+        return f"id:{self.id}, name:{self.name if self.name else 'None'}"

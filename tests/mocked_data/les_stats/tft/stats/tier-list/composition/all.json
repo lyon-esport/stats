@@ -1,0 +1,47 @@
+{
+  "data": {
+    "tier1": {
+      "min": {
+        "name": "Set6_Assassin",
+        "count": 1
+      },
+      "max": {
+        "name": "Set6_Rivals",
+        "count": 5
+      },
+      "sum": 51
+    },
+    "tier2": {
+      "min": {
+        "name": "Set6_Bruiser",
+        "count": 1
+      },
+      "max": {
+        "name": "Set6_Innovator",
+        "count": 2
+      },
+      "sum": 8
+    },
+    "tier3": {
+      "min": {
+        "name": "Set6_Arcanist",
+        "count": 1
+      },
+      "max": {
+        "name": "Set6_Arcanist",
+        "count": 1
+      },
+      "sum": 3
+    },
+    "tier4": null,
+    "tier5": null,
+    "tier6": null,
+    "tier7": null,
+    "tier8": null,
+    "tier9": null,
+    "tier10": null,
+    "tier11": null,
+    "tier12": null
+  },
+  "error": null
+}

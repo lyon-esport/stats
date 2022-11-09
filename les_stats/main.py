@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
         version=version,
         contact={
             "name": "Lyon e-Sport",
-            "url": "https://www.lyon-esport.fr/contact/",
+            "url": "https://www.lyon-esport.fr/",
             "email": "dev@lyon-esport.fr",
         },
         license_info={

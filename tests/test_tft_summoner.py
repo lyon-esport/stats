@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Union
 
 import httpx
@@ -11,10 +12,18 @@ NAMESPACE = "/tft/summoner/"
 MOCKED_DATA_FOLDER = "riot/tft/summoner/"
 
 
+@pytest.mark.parametrize(
+    ("endpoint",),
+    (
+        ("by-puuid",),
+        ("by-name",),
+        ("rank",),
+    ),
+)
 @pytest.mark.asyncio
-async def test_get_summoners_by_puuid_scopes(client: CustomClient):
+async def test_scopes(client: CustomClient, endpoint: str):
     await client.test_api_scope(
-        "GET", f"{NAMESPACE}by-puuid", [Scope.read, Scope.write]
+        "GET", f"{NAMESPACE}{endpoint}", [Scope.read, Scope.write]
     )
 
 
@@ -76,7 +85,9 @@ async def test_get_summoners_by_puuid(
             method="GET",
             url=f"https://euw1.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{infos[i]['puuid']}",
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['puuid']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["puuid"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -92,11 +103,6 @@ async def test_get_summoners_by_puuid(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_get_summoners_by_name_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}by-name", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -157,7 +163,9 @@ async def test_get_summoners_by_name(
             method="GET",
             url=f"https://euw1.api.riotgames.com/tft/summoner/v1/summoners/by-name/{infos[i]['name']}",
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['name']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["name"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -173,11 +181,6 @@ async def test_get_summoners_by_name(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_get_summoners_rank_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}rank", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -238,7 +241,9 @@ async def test_get_summoners_rank(
             method="GET",
             url=f"https://euw1.api.riotgames.com/tft/league/v1/entries/by-summoner/{infos[i]['summoner_id']}",
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['summoner_id']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["summoner_id"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
