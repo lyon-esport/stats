@@ -47,6 +47,9 @@ async def insert_match_data(match: Match):
 
     # Process players
     for participant in match.players:
+        # From tim -> observer
+        if not participant.team_id:
+            continue
         account = await participant.account.get()
 
         player, _ = await ValorantPlayer.get_or_create(
