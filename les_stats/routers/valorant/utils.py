@@ -23,18 +23,21 @@ logger = logging.getLogger(__name__)
 
 async def get_match_stats(match_id):
     match_data = await val.Match(match_id)
-    insert_match_data(match_data)
+    await insert_match_data(match_data)
 
 
 async def insert_match_data(match: Match):
     # Skip non defuse game
     if not match.info.game_mode.startswith("/Game/GameModes/Bomb/"):
+        print("Not defuse")
         return
+    print(match.id)
+    # print(match.start_time_millis)
     # Create match in DB
     match_db, _ = await ValorantGame.update_or_create(
         match_id=match.id,
         defaults={
-            "start_time": match.start_time,
+            "start_time": match.info.start,
             "length": match.info.length.total_seconds(),
             "map_url": match.info.map_url,
             "is_completed": match.info.is_completed,
