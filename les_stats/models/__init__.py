@@ -20,6 +20,7 @@ from les_stats.models.valorant.game import (
     KillAssist,
     ValorantArmor,
     ValorantCharacter,
+    ValorantDamageRoundStat,
     ValorantGame,
     ValorantGameRound,
     ValorantLocationData,

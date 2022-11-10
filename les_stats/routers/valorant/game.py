@@ -6,7 +6,7 @@ from pyot.models import val
 
 from les_stats.models.internal.auth import Scope
 from les_stats.routers.valorant.utils import insert_match_data
-from les_stats.schemas.client_api.data import DataResponse
+from les_stats.schemas.client_api.data import DataResponse, ErrorResponse
 from les_stats.utils.auth import scope_required
 
 router = APIRouter()
@@ -62,8 +62,11 @@ async def save_matches_in_stat_system(
         matches: List[val.Match] = await queue.join()
     data = []
     for match in matches:
-        await insert_match_data(match)
-        data.append(DataResponse(data=match.id))
+        error = None
+        result = await insert_match_data(match)
+        if result:
+            error = ErrorResponse(status_code=100, message=result)
+        data.append(DataResponse(data=match.id, error=error))
     return data
 
 

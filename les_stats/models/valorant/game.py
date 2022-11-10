@@ -117,6 +117,25 @@ class ValorantPlayerRoundStat(models.Model):
         )
 
 
+class ValorantDamageRoundStat(models.Model):
+    player_round = fields.ForeignKeyField("models.ValorantPlayerRoundStat")
+    receiver = fields.ForeignKeyField(
+        "models.ValorantTeamPlayer", related_name="round_damages"
+    )
+    damage = fields.IntField()
+    legshots = fields.IntField()
+    bodyshots = fields.IntField()
+    headshots = fields.IntField()
+
+    class Meta:
+        unique_together = (
+            (
+                "player_round",
+                "receiver",
+            ),
+        )
+
+
 class ValorantPlayerRoundKill(models.Model):
     player_round = fields.ForeignKeyField("models.ValorantPlayerRoundStat")
     game_time = fields.IntField()

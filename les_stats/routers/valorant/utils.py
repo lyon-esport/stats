@@ -2,6 +2,7 @@
 # author Etienne G.
 
 import logging
+from typing import Optional
 
 from pyot.models import val
 from pyot.models.val import Match
@@ -9,6 +10,7 @@ from pyot.models.val import Match
 from les_stats.models.valorant.game import (
     KillAssist,
     ValorantCharacter,
+    ValorantDamageRoundStat,
     ValorantGame,
     ValorantGameRound,
     ValorantPlayer,
@@ -26,11 +28,12 @@ async def get_match_stats(match_id):
     await insert_match_data(match_data)
 
 
-async def insert_match_data(match: Match):
+async def insert_match_data(match: Match) -> Optional[str]:
+    "Insert a match, if everything is ok, get None or else the error message"
     # Skip non defuse game
     if not match.info.game_mode.startswith("/Game/GameModes/Bomb/"):
         print("Not defuse")
-        return
+        return "Not defuse"
     print(match.id)
     # print(match.start_time_millis)
     # Create match in DB
@@ -147,6 +150,22 @@ async def insert_match_data(match: Match):
                     "weapon": weapon,
                 },
             )
+            for damage in player_stats.damage:
+                print("Receiver: {}".format(damage.receiver))
+                receiver = await ValorantTeamPlayer.get(
+                    game=match_db, player__puuid=damage.receiver
+                )
+                damage, _ = await ValorantDamageRoundStat.update_or_create(
+                    player_round=player_round_stat,
+                    receiver=receiver,
+                    defaults={
+                        "damage": damage.damage,
+                        "legshots": damage.legshots,
+                        "bodyshots": damage.bodyshots,
+                        "headshots": damage.headshots,
+                    },
+                )
+
             for kill in player_stats.kills:
                 killer = await ValorantTeamPlayer.get(
                     game=match_db, player__puuid=kill.killer_puuid
@@ -182,3 +201,4 @@ async def insert_match_data(match: Match):
                     round_kill, _ = await KillAssist.get_or_create(
                         round_kill=round_kill, player=assist_player
                     )
+    return None
