@@ -5,12 +5,12 @@ from pydantic import BaseSettings, HttpUrl, validator
 
 
 class Settings(BaseSettings):
-    APP_HOST: str = "127.0.0.1"
+    APP_HOST: str = "localhost"
     APP_PORT: int = 8000
     TIMEZONE: str
     DB_URL: str
     SALT: str
-    EXPORTER_ADDR: str = "127.0.0.1"
+    EXPORTER_ADDR: str = "localhost"
     EXPORTER_PORT: int = 9345
     VALORANT_API_KEY: str = None
     VALORANT_API_ROUTING: str = None
