@@ -6,6 +6,7 @@ from typing import Optional
 
 from pyot.models import val
 from pyot.models.val import Match
+from tortoise.transactions import atomic
 
 from les_stats.models.valorant.game import (
     KillAssist,
@@ -28,14 +29,17 @@ async def get_match_stats(match_id):
     await insert_match_data(match_data)
 
 
+@atomic()
 async def insert_match_data(match: Match) -> Optional[str]:
     "Insert a match, if everything is ok, get None or else the error message"
     # Skip non defuse game
     if not match.info.game_mode.startswith("/Game/GameModes/Bomb/"):
         # print("Not defuse")
         return "Not defuse"
+    logger.debug("Processing math: {}", match.id)
     # print(match.id)
     # print(match.start_time_millis)
+
     # Create match in DB
     match_db, _ = await ValorantGame.update_or_create(
         match_id=match.id,
