@@ -46,9 +46,9 @@ LES_STATS_TFT_API_KEY="tft api key"
 LES_STATS_TFT_API_ROUTING="lol api routing"
 LES_STATS_VALORANT_API_KEY="valorant api key"
 LES_STATS_VALORANT_API_ROUTING="lol api routing"
-LES_STATS_APP_HOST="Application bind sotcket to this host (default 127.0.0.1)"
+LES_STATS_APP_HOST="Application bind sotcket to this host (default localhost)"
 LES_STATS_APP_PORT="Application bind sotcket with this port (default 8000)"
-LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default 9345)"
+LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default localhost)"
 LES_STATS_EXPORTER_PORT="Exporter bind sotcket with this port (default 9345)"
 LES_STATS_BACKEND_CORS_ORIGINS="[http://localhost.fr,http://test.localhost.fr]"
 LES_STATS_SENTRY_DSN="your sentry DSN"
@@ -65,10 +65,10 @@ python3 -m les_stats.utils.auth --help
 ```
 
 # API
-APIs documentation are available at http://127.0.0.1:8000/docs
+APIs documentation are available at http://localhost:8000/docs
 
 # Prometheus
-Stats are available at http://127.0.0.1:9345/metrics
+Stats are available at http://localhost:9345/metrics
 
 # Licence
 
