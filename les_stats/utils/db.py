@@ -102,7 +102,7 @@ async def load_match(game_name: str, tag: str) -> None:
 
     history = await val.MatchHistory(puuid=content.puuid).get()
     async with Queue() as queue:
-        for match in history.history[:10]:
+        for match in history.history[:40]:
             await queue.put(match.get())
         first_10_matches: List[val.Match] = await queue.join()
 

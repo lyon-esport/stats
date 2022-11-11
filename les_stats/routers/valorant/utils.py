@@ -32,9 +32,9 @@ async def insert_match_data(match: Match) -> Optional[str]:
     "Insert a match, if everything is ok, get None or else the error message"
     # Skip non defuse game
     if not match.info.game_mode.startswith("/Game/GameModes/Bomb/"):
-        print("Not defuse")
+        # print("Not defuse")
         return "Not defuse"
-    print(match.id)
+    # print(match.id)
     # print(match.start_time_millis)
     # Create match in DB
     match_db, _ = await ValorantGame.update_or_create(
@@ -151,7 +151,7 @@ async def insert_match_data(match: Match) -> Optional[str]:
                 },
             )
             for damage in player_stats.damage:
-                print("Receiver: {}".format(damage.receiver))
+                # print("Receiver: {}".format(damage.receiver))
                 receiver = await ValorantTeamPlayer.get(
                     game=match_db, player__puuid=damage.receiver
                 )
@@ -189,7 +189,7 @@ async def insert_match_data(match: Match) -> Optional[str]:
                         "player_location_y": kill.player_locations[0].location.y
                         if kill.player_locations
                         else None,
-                        "last_hit_damage_item": kill.finishing_damage.damage_item,
+                        "last_hit_damage_item": kill.finishing_damage.damage_item.lower(),
                         "last_hit_damage_type": kill.finishing_damage.damage_type,
                         "last_hit_second_fire_mode": kill.finishing_damage.is_secondary_fire_mode,
                     },
