@@ -72,7 +72,6 @@ async def get_tier_list_composition(
                 ),
             )
             .group_by("name", "current_trait__tier_current")
-            .annotate(count_tier_list_trait=TCount("current_trait__tier_current"))
             .values("name", "current_trait__tier_current", "count_tier_list_trait")
         )
 
@@ -84,7 +83,6 @@ async def get_tier_list_composition(
         for trait in traits:
             if f"tier{trait['current_trait__tier_current']}" not in tiers:
                 tiers[f"tier{trait['current_trait__tier_current']}"] = {
-                    "total": trait["count_tier_list_trait"],
                     "min": {
                         "name": trait["name"],
                         "count": trait["count_tier_list_trait"],
@@ -95,9 +93,6 @@ async def get_tier_list_composition(
                     },
                 }
             else:
-                tiers[f"tier{trait['current_trait__tier_current']}"]["total"] += trait[
-                    "count_tier_list_trait"
-                ]
 
                 if (
                     tiers[f"tier{trait['current_trait__tier_current']}"]["min"]["count"]
@@ -132,7 +127,6 @@ async def get_tier_list_composition(
                         name=tiers[k]["max"]["name"],
                         count=tiers[k]["max"]["count"],
                     ),
-                    sum=tiers[k]["total"],
                 )
 
         data = TierListCompositionResponse(data=TierListCompositionRanks(**tiers))
@@ -165,7 +159,6 @@ async def get_tier_list_item(
         if len(items) == 0:
             raise DoesNotExist
 
-        total = len(items)
         nb_items = await items[0].items.all().count()
         min = {"id": items[0].id, "name": items[0].name, "count": nb_items}
         max = {"id": items[0].id, "name": items[0].name, "count": nb_items}
@@ -195,7 +188,6 @@ async def get_tier_list_item(
                     name=max["name"],
                     count=max["count"],
                 ),
-                sum=total,
             )
         )
     except DoesNotExist:
@@ -226,7 +218,6 @@ async def get_tier_list_unit(
             )
             .exclude(current_unit=None)
             .group_by("character_id", "current_unit__tier")
-            .annotate(count_tier_list_unit=TCount("current_unit__tier"))
             .values("character_id", "current_unit__tier", "count_tier_list_unit")
         )
 
@@ -238,7 +229,6 @@ async def get_tier_list_unit(
         for unit in units:
             if f"tier{unit['current_unit__tier']}" not in tiers:
                 tiers[f"tier{unit['current_unit__tier']}"] = {
-                    "total": unit["count_tier_list_unit"],
                     "min": {
                         "character_id": unit["character_id"],
                         "count": unit["count_tier_list_unit"],
@@ -286,7 +276,6 @@ async def get_tier_list_unit(
                         character_id=tiers[k]["max"]["character_id"],
                         count=tiers[k]["max"]["count"],
                     ),
-                    sum=tiers[k]["total"],
                 )
 
         data = TierListUnitResponse(data=TierListUnitRanks(**tiers))

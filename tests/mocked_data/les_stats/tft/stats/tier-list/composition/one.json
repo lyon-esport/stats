@@ -8,8 +8,7 @@
       "max": {
         "name": "Set6_Rivals",
         "count": 5
-      },
-      "sum": 37
+      }
     },
     "tier2": {
       "min": {
@@ -19,8 +18,7 @@
       "max": {
         "name": "Set6_Innovator",
         "count": 2
-      },
-      "sum": 6
+      }
     },
     "tier3": {
       "min": {
@@ -30,8 +28,7 @@
       "max": {
         "name": "Set6_Arcanist",
         "count": 1
-      },
-      "sum": 3
+      }
     },
     "tier4": null,
     "tier5": null,

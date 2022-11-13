@@ -14,7 +14,6 @@ class TierListComposition(BaseModel):
 class TierListCompositionTier(BaseModel):
     min: TierListComposition
     max: TierListComposition
-    sum: int
 
 
 class TierListCompositionRanks(BaseModel):
@@ -46,7 +45,6 @@ class TierListItem(BaseModel):
 class TierListItemRanks(BaseModel):
     min: TierListItem
     max: TierListItem
-    sum: int
 
 
 class TierListItemResponse(BaseModel):
@@ -62,7 +60,6 @@ class TierListUnit(BaseModel):
 class TierListUnitTier(BaseModel):
     min: TierListUnit
     max: TierListUnit
-    sum: int
 
 
 class TierListUnitRanks(BaseModel):

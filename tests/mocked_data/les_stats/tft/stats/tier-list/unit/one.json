@@ -8,8 +8,7 @@
       "max": {
         "character_id": "TFT6_Sejuani",
         "count": 2
-      },
-      "sum": 9
+      }
     },
     "tier2": {
       "min": {
@@ -19,8 +18,7 @@
       "max": {
         "character_id": "TFT6_Ekko",
         "count": 3
-      },
-      "sum": 41
+      }
     },
     "tier3": {
       "min": {
@@ -30,8 +28,7 @@
       "max": {
         "character_id": "TFT6_Brand",
         "count": 1
-      },
-      "sum": 12
+      }
     }
   },
   "error": null
