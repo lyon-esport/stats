@@ -450,14 +450,14 @@ async def get_games_damage(
                 min_total_damage_to_players=TMin(
                     "participant__total_damage_to_players"
                 ),
-                avg_total_damage_to_players=TAvg(
-                    "participant__total_damage_to_players"
-                ),
                 max_total_damage_to_players=TMax(
                     "participant__total_damage_to_players"
                 ),
                 sum_total_damage_to_players=TSum(
                     "participant__total_damage_to_players"
+                ),
+                count_game_played=TCount(
+                    "participant"
                 ),
             )
         )
@@ -466,7 +466,7 @@ async def get_games_damage(
             raise DoesNotExist
 
         total = 0
-        avgs = []
+        nb_players = 0
         min = {
             "puuid": players[0].puuid,
             "damage": players[0].min_total_damage_to_players,
@@ -478,12 +478,7 @@ async def get_games_damage(
 
         for player in players:
             total += player.sum_total_damage_to_players
-            avgs.append(
-                {
-                    "avg": player.avg_total_damage_to_players,
-                    "weight": len(player.participant),
-                }
-            )
+            nb_players += player.count_game_played
 
             if min["damage"] > player.min_total_damage_to_players:
                 min["puuid"] = player.puuid
@@ -499,7 +494,7 @@ async def get_games_damage(
                     puuid=min["puuid"],
                     damage=min["damage"],
                 ),
-                avg=sum((avg["weight"] / len(avgs) * avg["avg"]) for avg in avgs),
+                avg=total/nb_players,
                 max=GamesDamage(
                     puuid=max["puuid"],
                     damage=max["damage"],

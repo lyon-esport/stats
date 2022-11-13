@@ -20,7 +20,7 @@ ENDPOINTS = [
     "player/{player_id}/placement",
     "player/{player_id}/kill",
     "player/{player_id}/death-round",
-    #    "games/damage",
+    "games/damage",
     "games/time",
     "game/{match_id}/damage",
 ]
@@ -186,6 +186,5 @@ async def test_endpoints(
         expected_response = get_json_response(
             os.path.join(API_RESPONSE_DATA, endpoint, api_filename_response)
         )
-        print(endpoint)
         assert response.status_code == http_code
         assert response.json() == expected_response

@@ -1,3 +1,15 @@
 {
-
+  "data": {
+    "min": {
+      "puuid": "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw",
+      "damage": 4
+    },
+    "avg": 96.25,
+    "max": {
+      "puuid": "sy3wYYVMsnRJPJKI8TMCX1Ar6P7cLZBI0Y6Xldl3hOwiQaC_vLJflPudO6tnIbiU8GU3-jnUSUntig",
+      "damage": 302
+    },
+    "sum": 1540
+  },
+  "error": null
 }
