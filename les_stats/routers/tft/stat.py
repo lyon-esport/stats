@@ -317,9 +317,9 @@ async def get_player_placement(
                 )
             )
             .annotate(
-                min_placement=TMin("participant__placement"),
+                min_placement=TMax("participant__placement"),
                 avg_placement=TAvg("participant__placement"),
-                max_placement=TMax("participant__placement"),
+                max_placement=TMin("participant__placement"),
             )
         )
 
