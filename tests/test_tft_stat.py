@@ -15,7 +15,7 @@ MOCKED_DATA_FOLDER = "riot/tft/match/"
 API_RESPONSE_DATA = "les_stats/tft/stats/"
 ENDPOINTS = [
     "tier-list/composition",
-    #    "tier-list/item",
+    "tier-list/item",
     "tier-list/unit",
     "player/{player_id}/placement",
     "player/{player_id}/kill",

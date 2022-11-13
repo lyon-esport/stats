@@ -1,14 +1,14 @@
 {
   "data": {
     "min": {
-      "id": 3,
+      "id": 6,
       "name": "",
       "count": 1
     },
     "max": {
       "id": 19,
-      "name": "",
-      "count": 8
+      "name": "TFT_Item_InfinityEdge",
+      "count": 11
     },
     "sum": 68
   },

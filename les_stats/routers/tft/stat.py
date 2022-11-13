@@ -456,9 +456,7 @@ async def get_games_damage(
                 sum_total_damage_to_players=TSum(
                     "participant__total_damage_to_players"
                 ),
-                count_game_played=TCount(
-                    "participant"
-                ),
+                count_game_played=TCount("participant"),
             )
         )
 
@@ -494,7 +492,7 @@ async def get_games_damage(
                     puuid=min["puuid"],
                     damage=min["damage"],
                 ),
-                avg=total/nb_players,
+                avg=total / nb_players,
                 max=GamesDamage(
                     puuid=max["puuid"],
                     damage=max["damage"],

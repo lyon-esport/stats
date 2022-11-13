@@ -22,6 +22,7 @@ MOCKED_DATA_FOLDER = "riot/tft/match/"
     ("method", "endpoint", "json", "scopes"),
     (
         ("GET", "match-list", {}, [Scope.write, Scope.read]),
+        ("GET", "matches", {}, [Scope.write, Scope.read]),
         ("GET", "matches/save", {}, [Scope.write, Scope.read]),
         ("PUT", "matches/save", [{"id": "test"}], [Scope.write]),
         ("DELETE", "matches/save", ["test"], [Scope.write]),
@@ -194,7 +195,97 @@ async def test_get_matches_from_summoners(
     ),
 )
 @pytest.mark.asyncio
-async def test_get_matches(
+async def test_get_matches_stat_from_a_list_of_game(
+    client: CustomClient,
+    httpx_mock: HTTPXMock,
+    infos: List[Dict[str, Union[str, int]]],
+    http_code: int,
+):
+    url = f"{NAMESPACE}matches"
+
+    for i in range(0, len(infos)):
+        if i == 0:
+            url = f"{url}?match_id={infos[i]['match_id']}"
+        else:
+            url = f"{url}&match_id={infos[i]['match_id']}"
+        httpx_mock.add_response(
+            method="GET",
+            url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
+            status_code=infos[i]["http_code"],
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+            ),
+        )
+
+    response = await client.test_api("GET", url, Scope.read)
+
+    assert response.status_code == http_code
+    datas = response.json()
+
+    for i in range(0, len(infos)):
+        if httpx.codes.is_success(infos[i]["http_code"]):
+            assert datas[i]["error"] is None
+            assert datas[i]["data"] is not None
+        else:
+            assert datas[i]["data"] is None
+            assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
+            assert datas[i]["error"]["message"] is not None
+
+
+@pytest.mark.parametrize(
+    (
+        "infos",
+        "http_code",
+    ),
+    (
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "http_code": 200,
+                },
+            ],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5979031153",
+                    "http_code": 200,
+                },
+            ],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5979031153NotExist",
+                    "http_code": 400,
+                },
+            ],
+            400,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "http_code": 200,
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "http_code": 200,
+                },
+                {
+                    "match_id": "EUW1_5979031153NotExist",
+                    "http_code": 400,
+                },
+            ],
+            207,
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_get_matches_in_stat_system(
     client: CustomClient,
     httpx_mock: HTTPXMock,
     infos: List[Dict[str, Union[str, int]]],
