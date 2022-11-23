@@ -234,53 +234,124 @@ async def test_get_matches_stat_from_a_list_of_game(
 
 @pytest.mark.parametrize(
     (
-        "infos",
+        "matches_to_create",
+        "filters",
+        "result",
         "http_code",
     ),
     (
         (
             [
                 {
-                    "match_id": "EUW1_5781372307",
-                    "http_code": 200,
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": None,
+                    "stage": None,
                 },
             ],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
             200,
+        ),
+        (
+            [],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": None,
+            },
+            [],
+            404,
         ),
         (
             [
                 {
                     "match_id": "EUW1_5979031153",
-                    "http_code": 200,
+                    "event": "test",
+                    "tournament": None,
+                    "stage": None,
                 },
             ],
+            {
+                "event": "test",
+                "tournament": None,
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
             200,
         ),
         (
             [
                 {
-                    "match_id": "EUW1_5979031153NotExist",
-                    "http_code": 400,
+                    "match_id": "EUW1_5781372307",
+                    "event": None,
+                    "tournament": "tests",
+                    "stage": "aaaa",
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": "test",
+                    "stage": None,
                 },
             ],
-            400,
+            {
+                "event": None,
+                "tournament": "test",
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
         ),
         (
             [
                 {
                     "match_id": "EUW1_5781372307",
-                    "http_code": 200,
+                    "event": None,
+                    "tournament": None,
+                    "stage": "aaaa",
                 },
                 {
                     "match_id": "EUW1_5979031153",
-                    "http_code": 200,
-                },
-                {
-                    "match_id": "EUW1_5979031153NotExist",
-                    "http_code": 400,
+                    "event": None,
+                    "tournament": None,
+                    "stage": "test",
                 },
             ],
-            207,
+            {
+                "event": None,
+                "tournament": None,
+                "stage": "test",
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "event": "fff",
+                    "tournament": None,
+                    "stage": "test",
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": "fff",
+                    "stage": "test",
+                },
+            ],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": "test",
+            },
+            [{"match_id": "EUW1_5781372307"}, {"match_id": "EUW1_5979031153"}],
+            200,
         ),
     ),
 )
@@ -288,38 +359,63 @@ async def test_get_matches_stat_from_a_list_of_game(
 async def test_get_matches_in_stat_system(
     client: CustomClient,
     httpx_mock: HTTPXMock,
-    infos: List[Dict[str, Union[str, int]]],
+    matches_to_create: List[Dict[str, Union[str, None]]],
+    filters: Dict[str, str],
+    result: List[Dict[str, str]],
     http_code: int,
 ):
-    url = f"{NAMESPACE}matches"
+    j_datas = []
+    for match in matches_to_create:
+        j_data = {"id": match["match_id"]}
+        if match["event"]:
+            await Event.get_or_create(name=match["event"])
+            j_data["event"] = match["event"]
+        if match["tournament"]:
+            await Tournament.get_or_create(name=match["tournament"])
+            j_data["tournament"] = match["tournament"]
+        if match["stage"]:
+            await Stage.get_or_create(name=match["stage"])
+            j_data["stage"] = match["stage"]
 
-    for i in range(0, len(infos)):
-        if i == 0:
-            url = f"{url}?match_id={infos[i]['match_id']}"
-        else:
-            url = f"{url}&match_id={infos[i]['match_id']}"
         httpx_mock.add_response(
             method="GET",
-            url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
-            status_code=infos[i]["http_code"],
+            url=f"https://{RiotAPI.get_region(match['match_id'])}.api.riotgames.com/tft/match/v1/matches/{match['match_id']}",
+            status_code=200,
             json=get_json_response(
-                os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+                os.path.join(MOCKED_DATA_FOLDER, match["match_id"] + ".json")
             ),
         )
+        j_datas.append(j_data)
 
-    response = await client.test_api("GET", url, Scope.read)
+    await client.test_api(
+        "POST",
+        f"{NAMESPACE}matches/save",
+        Scope.write,
+        json=j_datas,
+    )
 
+    response = await client.test_api(
+        "GET",
+        f"{NAMESPACE}matches/save",
+        Scope.read,
+        json={
+            "event": filters["event"],
+            "tournament": filters["tournament"],
+            "stage": filters["stage"],
+        },
+    )
+    print(matches_to_create)
+    print(result)
+    print(response.json())
     assert response.status_code == http_code
-    datas = response.json()
+    data = response.json()
 
-    for i in range(0, len(infos)):
-        if httpx.codes.is_success(infos[i]["http_code"]):
-            assert datas[i]["error"] is None
-            assert datas[i]["data"] is not None
-        else:
-            assert datas[i]["data"] is None
-            assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
-            assert datas[i]["error"]["message"] is not None
+    if httpx.codes.is_success(http_code):
+        assert data["error"] is None
+        assert data["data"] == result
+    else:
+        assert "data" not in data
+        assert data["detail"] is not None
 
 
 @pytest.mark.asyncio
