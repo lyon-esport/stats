@@ -394,19 +394,22 @@ async def test_get_matches_in_stat_system(
         json=j_datas,
     )
 
+    params = ""
+    if filters["event"]:
+        params = f"?event={filters['event']}"
+    if filters["tournament"]:
+        params += (
+            f"{'?' if len(params) == 0 else '&'}tournament={filters['tournament']}"
+        )
+    if filters["stage"]:
+        params += f"{'?' if len(params) == 0 else '&'}stage={filters['stage']}"
+
     response = await client.test_api(
         "GET",
-        f"{NAMESPACE}matches/save",
+        f"{NAMESPACE}matches/save{params}",
         Scope.read,
-        json={
-            "event": filters["event"],
-            "tournament": filters["tournament"],
-            "stage": filters["stage"],
-        },
     )
-    print(matches_to_create)
-    print(result)
-    print(response.json())
+
     assert response.status_code == http_code
     data = response.json()
 

@@ -72,6 +72,9 @@ async def get_tier_list_composition(
                 ),
             )
             .group_by("name", "current_trait__tier_current")
+            .annotate(
+                count_tier_list_trait=TCount("current_trait__tier_current"),
+            )
             .values("name", "current_trait__tier_current", "count_tier_list_trait")
         )
 
@@ -218,6 +221,9 @@ async def get_tier_list_unit(
             )
             .exclude(current_unit=None)
             .group_by("character_id", "current_unit__tier")
+            .annotate(
+                count_tier_list_unit=TCount("current_unit__tier"),
+            )
             .values("character_id", "current_unit__tier", "count_tier_list_unit")
         )
 
@@ -237,6 +243,7 @@ async def get_tier_list_unit(
                         "character_id": unit["character_id"],
                         "count": unit["count_tier_list_unit"],
                     },
+                    "total": unit["count_tier_list_unit"],
                 }
             else:
                 tiers[f"tier{unit['current_unit__tier']}"]["total"] += unit[
