@@ -1,12 +1,12 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 from tortoise.exceptions import DoesNotExist
 
 from les_stats.client_api.riot import RiotAPI
 from les_stats.models.internal.auth import Scope
 from les_stats.models.tft.game import TFTGame
-from les_stats.schemas.client_api.data import DataResponse
+from les_stats.schemas.client_api.data import DataResponse, ErrorResponse
 from les_stats.schemas.riot.game import GameSaveIn_Pydantic, RiotGame
 from les_stats.utils.auth import scope_required
 from les_stats.utils.internal import generate_kwargs_structure
@@ -61,7 +61,12 @@ async def get_matches_in_stat_system(
 
         data = DataResponse(data=games)
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return DataResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
 
     return data
 

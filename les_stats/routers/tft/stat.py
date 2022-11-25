@@ -10,6 +10,7 @@ from tortoise.functions import Sum as TSum
 
 from les_stats.models.internal.auth import Scope
 from les_stats.models.tft.game import TFTGame, TFTItem, TFTPlayer, TFTTrait, TFTUnit
+from les_stats.schemas.client_api.data import ErrorResponse
 from les_stats.schemas.internal.generic import TimeElapsed
 from les_stats.schemas.riot.game import RiotHost
 from les_stats.schemas.tft.stat import (
@@ -134,7 +135,12 @@ async def get_tier_list_composition(
 
         data = TierListCompositionResponse(data=TierListCompositionRanks(**tiers))
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return TierListCompositionResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
     return data
 
 
@@ -194,7 +200,12 @@ async def get_tier_list_item(
             )
         )
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return TierListCompositionResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
 
     return data
 
@@ -287,7 +298,12 @@ async def get_tier_list_unit(
 
         data = TierListUnitResponse(data=TierListUnitRanks(**tiers))
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return TierListCompositionResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
 
     return data
 
@@ -329,7 +345,7 @@ async def get_player_placement(
     except DoesNotExist:
         raise HTTPException(
             status_code=404,
-            detail=f"Player {puuid} from region {region} not found in stat system",
+            detail=f"Player {puuid} from region {region.value} not found in stat system",
         )
 
     return data
@@ -374,7 +390,7 @@ async def get_player_kill(
     except DoesNotExist:
         raise HTTPException(
             status_code=404,
-            detail=f"Player {puuid} from region {region} not found in stat system",
+            detail=f"Player {puuid} from region {region.value} not found in stat system",
         )
 
     return data
@@ -417,7 +433,7 @@ async def get_player_death_round(
     except DoesNotExist:
         raise HTTPException(
             status_code=404,
-            detail=f"Player {puuid} from region {region} not found in stat system",
+            detail=f"Player {puuid} from region {region.value} not found in stat system",
         )
 
     return data
@@ -497,7 +513,12 @@ async def get_games_damage(
             )
         )
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return TierListCompositionResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
 
     return data
 
@@ -548,7 +569,12 @@ async def get_games_time(
             )
         )
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="No games found in stat system")
+        response.status_code = 200
+        return TierListCompositionResponse(
+            error=ErrorResponse(
+                status_code=200, message="No games found in stat system"
+            )
+        )
 
     return data
 

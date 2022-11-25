@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.post("", response_model=Event_Pydantic)
 @scope_required([Scope.write])
-async def add_event(request: Request, event: Event_Pydantic):
+async def add_event(request: Request, response: Response, event: Event_Pydantic):
     async with in_transaction("default") as connection:
         if not await Event.exists(name=event.name):
             event_obj = Event(**event.dict(exclude={"tournaments"}, exclude_unset=True))
@@ -47,6 +47,7 @@ async def add_event(request: Request, event: Event_Pydantic):
     metric_event.inc()
     metric_tournament.inc(await Tournament.all().count())
     metric_stage.inc(await Stage.all().count())
+    response.status_code = 201
     return Event_Pydantic.parse_obj(event_obj)
 
 

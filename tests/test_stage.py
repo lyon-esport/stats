@@ -46,7 +46,7 @@ async def test_scopes(
             {
                 "name": "Bracket",
             },
-            200,
+            201,
         ),
     ),
 )

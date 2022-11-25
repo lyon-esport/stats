@@ -101,6 +101,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
         "player_id",
         "region",
         "http_code",
+        "http_code_id",
         "api_filename_response",
     ),
     (
@@ -112,6 +113,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
             "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw",
             RiotHost.europe.value,
             200,
+            200,
             "all.json",
         ),
         (
@@ -121,6 +123,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
             "EUW1_5781372307",
             "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw",
             RiotHost.europe.value,
+            200,
             200,
             "one.json",
         ),
@@ -132,6 +135,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
             "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw",
             RiotHost.europe.value,
             200,
+            200,
             "one.json",
         ),
         (
@@ -142,6 +146,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
             "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw",
             RiotHost.europe.value,
             200,
+            200,
             "one.json",
         ),
         (
@@ -151,6 +156,7 @@ async def test_scopes(client: CustomClient, endpoint: str):
             "test",
             "test",
             RiotHost.europe.value,
+            200,
             404,
             "not_found.json",
         ),
@@ -167,6 +173,7 @@ async def test_endpoints(
     player_id: str,
     region: RiotHost,
     http_code: int,
+    http_code_id: int,
     api_filename_response: str,
 ):
     params = ""
@@ -186,5 +193,10 @@ async def test_endpoints(
         expected_response = get_json_response(
             os.path.join(API_RESPONSE_DATA, endpoint, api_filename_response)
         )
-        assert response.status_code == http_code
+
+        assert (
+            response.status_code == http_code_id
+            if "match_id" in endpoint or "player_id" in endpoint
+            else http_code
+        )
         assert response.json() == expected_response

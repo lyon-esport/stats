@@ -55,7 +55,7 @@ async def test_scopes(
             {
                 "name": "Pro",
             },
-            200,
+            201,
             False,
         ),
         (
@@ -65,7 +65,7 @@ async def test_scopes(
         ),
         (
             {"name": "Pro2", "stages": [{"name": "Bracket"}, {"name": "Bracket2"}]},
-            200,
+            201,
             False,
         ),
     ),

@@ -52,7 +52,7 @@ async def test_scopes(
             {
                 "name": "Lyon e-Sport1",
             },
-            200,
+            201,
             False,
         ),
         (
@@ -65,7 +65,7 @@ async def test_scopes(
                 "name": "Lyon e-Sport2",
                 "tournaments": [{"name": "Pro"}, {"name": "Pro2"}],
             },
-            200,
+            201,
             False,
         ),
         (
@@ -84,7 +84,7 @@ async def test_scopes(
                     {"name": "Pro2", "stages": [{"name": "Bracket"}]},
                 ],
             },
-            200,
+            201,
             False,
         ),
     ),

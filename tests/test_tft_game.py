@@ -264,8 +264,8 @@ async def test_get_matches_stat_from_a_list_of_game(
                 "tournament": None,
                 "stage": None,
             },
-            [],
-            404,
+            None,
+            200,
         ),
         (
             [
@@ -414,7 +414,10 @@ async def test_get_matches_in_stat_system(
     data = response.json()
 
     if httpx.codes.is_success(http_code):
-        assert data["error"] is None
+        assert data["error"] is None or (
+            data["data"] is None
+            and httpx.codes.is_success(data["error"]["status_code"])
+        )
         assert data["data"] == result
     else:
         assert "data" not in data

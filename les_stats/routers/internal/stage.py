@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 from tortoise.exceptions import DoesNotExist
 
 from les_stats.metrics.internal.metrics import metric_stage
@@ -15,10 +15,11 @@ router = APIRouter()
 
 @router.post("", response_model=Stage_Pydantic)
 @scope_required([Scope.write])
-async def add_stage(request: Request, stage: Stage_Pydantic):
+async def add_stage(request: Request, response: Response, stage: Stage_Pydantic):
     if not await Stage.exists(name=stage.name):
         stage_obj = await Stage.create(**stage.dict(exclude_unset=True))
         metric_stage.inc()
+        response.status_code = 201
         return Stage_Pydantic.parse_obj(stage_obj)
     else:
         raise HTTPException(status_code=409, detail=f"Event {stage.name} already exist")
