@@ -49,6 +49,7 @@ class CustomClient(TestClient):
         await Api.get_or_create(
             name=f"TEST_SCOPE_{scope}", scope=scope, api_key=get_digest(api_key)
         )
+        print(url)
         return self.request(method, url, headers={"x-api-key": api_key}, json=json)
 
 

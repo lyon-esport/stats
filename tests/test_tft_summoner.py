@@ -114,7 +114,7 @@ async def test_get_summoners_by_puuid(
         (
             [
                 {
-                    "name": "MöNsTeRRR",
+                    "name": "MoNsTeRRR",
                     "http_code": 200,
                 },
             ],
@@ -123,7 +123,7 @@ async def test_get_summoners_by_puuid(
         (
             [
                 {
-                    "name": "MöNsTeRRRNotExist",
+                    "name": "MoNsTeRRRNotExist",
                     "http_code": 400,
                 },
             ],
@@ -132,11 +132,11 @@ async def test_get_summoners_by_puuid(
         (
             [
                 {
-                    "name": "MöNsTeRRR",
+                    "name": "MoNsTeRRR",
                     "http_code": 200,
                 },
                 {
-                    "name": "MöNsTeRRRNotExist",
+                    "name": "MoNsTeRRRNotExist",
                     "http_code": 400,
                 },
             ],
@@ -152,7 +152,6 @@ async def test_get_summoners_by_name(
     http_code: int,
 ):
     url = f"{NAMESPACE}by-name"
-
     for i in range(0, len(infos)):
         if i == 0:
             url = f"{url}?summoner_name={infos[i]['name']}"
