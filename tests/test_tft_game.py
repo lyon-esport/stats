@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Union
 
 import httpx
@@ -17,11 +18,25 @@ NAMESPACE = "/tft/game/"
 MOCKED_DATA_FOLDER = "riot/tft/match/"
 
 
+@pytest.mark.parametrize(
+    ("method", "endpoint", "json", "scopes"),
+    (
+        ("GET", "match-list", {}, [Scope.write, Scope.read]),
+        ("GET", "matches", {}, [Scope.write, Scope.read]),
+        ("GET", "matches/save", {}, [Scope.write, Scope.read]),
+        ("PUT", "matches/save", [{"id": "test"}], [Scope.write]),
+        ("DELETE", "matches/save", ["test"], [Scope.write]),
+    ),
+)
 @pytest.mark.asyncio
-async def test_get_matches_from_summoners_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "GET", f"{NAMESPACE}match-list", [Scope.read, Scope.write]
-    )
+async def test_generic_scopes(
+    client: CustomClient,
+    method: str,
+    endpoint: str,
+    json: Dict[str, str],
+    scopes: Union[Scope.write, Scope.read],
+):
+    await client.test_api_scope(method, f"{NAMESPACE}{endpoint}", scopes, json=json)
 
 
 @pytest.mark.parametrize(
@@ -92,9 +107,9 @@ async def test_get_matches_from_summoners(
 ):
     url = f"{NAMESPACE}match-list?start={start}&count={count}"
     if end_time:
-        url = f"{url}?end_time={end_time}"
+        url = f"{url}&end_time={end_time}"
     if start_time:
-        url = f"{url}?start_time={start_time}"
+        url = f"{url}&start_time={start_time}"
 
     for i in range(0, len(infos)):
         url = f"{url}&puuid={infos[i]['puuid']}"
@@ -107,7 +122,9 @@ async def test_get_matches_from_summoners(
             method="GET",
             url=mocked_url,
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['puuid']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["puuid"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -123,13 +140,6 @@ async def test_get_matches_from_summoners(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_get_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "GET", f"{NAMESPACE}match-list", [Scope.read, Scope.write]
-    )
 
 
 @pytest.mark.parametrize(
@@ -185,7 +195,7 @@ async def test_get_matches_scopes(client: CustomClient):
     ),
 )
 @pytest.mark.asyncio
-async def test_get_matches(
+async def test_get_matches_stat_from_a_list_of_game(
     client: CustomClient,
     httpx_mock: HTTPXMock,
     infos: List[Dict[str, Union[str, int]]],
@@ -202,7 +212,9 @@ async def test_get_matches(
             method="GET",
             url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
             status_code=infos[i]["http_code"],
-            json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['match_id']}"),
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+            ),
         )
 
     response = await client.test_api("GET", url, Scope.read)
@@ -220,13 +232,207 @@ async def test_get_matches(
             assert datas[i]["error"]["message"] is not None
 
 
+@pytest.mark.parametrize(
+    (
+        "matches_to_create",
+        "filters",
+        "result",
+        "http_code",
+    ),
+    (
+        (
+            [
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": None,
+                    "stage": None,
+                },
+            ],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+        (
+            [],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": None,
+            },
+            None,
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": "test",
+                    "tournament": None,
+                    "stage": None,
+                },
+            ],
+            {
+                "event": "test",
+                "tournament": None,
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "event": None,
+                    "tournament": "tests",
+                    "stage": "aaaa",
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": "test",
+                    "stage": None,
+                },
+            ],
+            {
+                "event": None,
+                "tournament": "test",
+                "stage": None,
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "event": None,
+                    "tournament": None,
+                    "stage": "aaaa",
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": None,
+                    "stage": "test",
+                },
+            ],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": "test",
+            },
+            [{"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+        (
+            [
+                {
+                    "match_id": "EUW1_5781372307",
+                    "event": "fff",
+                    "tournament": None,
+                    "stage": "test",
+                },
+                {
+                    "match_id": "EUW1_5979031153",
+                    "event": None,
+                    "tournament": "fff",
+                    "stage": "test",
+                },
+            ],
+            {
+                "event": None,
+                "tournament": None,
+                "stage": "test",
+            },
+            [{"match_id": "EUW1_5781372307"}, {"match_id": "EUW1_5979031153"}],
+            200,
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_get_matches_in_stat_system(
+    client: CustomClient,
+    httpx_mock: HTTPXMock,
+    matches_to_create: List[Dict[str, Union[str, None]]],
+    filters: Dict[str, str],
+    result: List[Dict[str, str]],
+    http_code: int,
+):
+    j_datas = []
+    for match in matches_to_create:
+        j_data = {"id": match["match_id"]}
+        if match["event"]:
+            await Event.get_or_create(name=match["event"])
+            j_data["event"] = match["event"]
+        if match["tournament"]:
+            await Tournament.get_or_create(name=match["tournament"])
+            j_data["tournament"] = match["tournament"]
+        if match["stage"]:
+            await Stage.get_or_create(name=match["stage"])
+            j_data["stage"] = match["stage"]
+
+        httpx_mock.add_response(
+            method="GET",
+            url=f"https://{RiotAPI.get_region(match['match_id'])}.api.riotgames.com/tft/match/v1/matches/{match['match_id']}",
+            status_code=200,
+            json=get_json_response(
+                os.path.join(MOCKED_DATA_FOLDER, match["match_id"] + ".json")
+            ),
+        )
+        j_datas.append(j_data)
+
+    await client.test_api(
+        "POST",
+        f"{NAMESPACE}matches/save",
+        Scope.write,
+        json=j_datas,
+    )
+
+    params = ""
+    if filters["event"]:
+        params = f"?event={filters['event']}"
+    if filters["tournament"]:
+        params += (
+            f"{'?' if len(params) == 0 else '&'}tournament={filters['tournament']}"
+        )
+    if filters["stage"]:
+        params += f"{'?' if len(params) == 0 else '&'}stage={filters['stage']}"
+
+    response = await client.test_api(
+        "GET",
+        f"{NAMESPACE}matches/save{params}",
+        Scope.read,
+    )
+
+    assert response.status_code == http_code
+    data = response.json()
+
+    if httpx.codes.is_success(http_code):
+        assert data["error"] is None or (
+            data["data"] is None
+            and httpx.codes.is_success(data["error"]["status_code"])
+        )
+        assert data["data"] == result
+    else:
+        assert "data" not in data
+        assert data["detail"] is not None
+
+
 @pytest.mark.asyncio
 async def test_save_matches_scopes(client: CustomClient, httpx_mock: HTTPXMock):
     httpx_mock.add_response(
         method="GET",
         url=f"https://{RiotAPI.get_region('EUW1_5979031153')}.api.riotgames.com/tft/match/v1/matches/EUW1_5979031153",
         status_code=200,
-        json=get_json_response(f"{MOCKED_DATA_FOLDER}EUW1_5979031153"),
+        json=get_json_response(
+            os.path.join(MOCKED_DATA_FOLDER, "EUW1_5979031153.json")
+        ),
     )
     await client.test_api_scope(
         "POST",
@@ -379,7 +585,9 @@ async def test_save_matches(
                 method="GET",
                 url=f"https://{RiotAPI.get_region(infos[i]['match_id'])}.api.riotgames.com/tft/match/v1/matches/{infos[i]['match_id']}",
                 status_code=infos[i]["http_code"],
-                json=get_json_response(f"{MOCKED_DATA_FOLDER}{infos[i]['match_id']}"),
+                json=get_json_response(
+                    os.path.join(MOCKED_DATA_FOLDER, infos[i]["match_id"] + ".json")
+                ),
             )
 
     response = await client.test_api(
@@ -397,13 +605,6 @@ async def test_save_matches(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_update_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "PUT", f"{NAMESPACE}matches/save", [Scope.write], json=[{"id": "test"}]
-    )
 
 
 @pytest.mark.parametrize(
@@ -570,13 +771,6 @@ async def test_update_matches(
             assert datas[i]["data"] is None
             assert datas[i]["error"]["status_code"] == infos[i]["http_code"]
             assert datas[i]["error"]["message"] is not None
-
-
-@pytest.mark.asyncio
-async def test_delete_matches_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "DELETE", f"{NAMESPACE}matches/save", [Scope.write], json=["test"]
-    )
 
 
 @pytest.mark.parametrize(

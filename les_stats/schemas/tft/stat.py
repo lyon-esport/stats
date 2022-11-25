@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 from les_stats.schemas.client_api.data import ErrorResponse
-from les_stats.schemas.internal.generic import GameTimeElapsed
+from les_stats.schemas.internal.generic import TimeElapsed
 
 
 class TierListComposition(BaseModel):
@@ -14,7 +14,6 @@ class TierListComposition(BaseModel):
 class TierListCompositionTier(BaseModel):
     min: TierListComposition
     max: TierListComposition
-    sum: int
 
 
 class TierListCompositionRanks(BaseModel):
@@ -38,15 +37,14 @@ class TierListCompositionResponse(BaseModel):
 
 
 class TierListItem(BaseModel):
+    id: int
     name: str
     count: int
 
 
 class TierListItemRanks(BaseModel):
     min: TierListItem
-    avg: int
     max: TierListItem
-    sum: int
 
 
 class TierListItemResponse(BaseModel):
@@ -62,7 +60,6 @@ class TierListUnit(BaseModel):
 class TierListUnitTier(BaseModel):
     min: TierListUnit
     max: TierListUnit
-    sum: int
 
 
 class TierListUnitRanks(BaseModel):
@@ -110,40 +107,40 @@ class DeathRoundResponse(BaseModel):
     error: ErrorResponse = None
 
 
+class GamesDamage(BaseModel):
+    puuid: str
+    damage: int
+
+
+class GamesDamageRanks(BaseModel):
+    min: GamesDamage
+    avg: float
+    max: GamesDamage
+    sum: int
+
+
+class GamesDamageResponse(BaseModel):
+    data: GamesDamageRanks = None
+    error: ErrorResponse = None
+
+
+class GamesTime(BaseModel):
+    min_time: TimeElapsed
+    avg_time: TimeElapsed
+    max_time: TimeElapsed
+    sum_time: TimeElapsed
+
+
+class GamesTimeResponse(BaseModel):
+    data: GamesTime = None
+    error: ErrorResponse = None
+
+
 class GameDamage(BaseModel):
     puuid: str
     damage: int
 
 
-class GameDamageRanks(BaseModel):
-    min: GameDamage
-    avg: int
-    max: GameDamage
-    sum: int
-
-
 class GameDamageResponse(BaseModel):
-    data: GameDamageRanks = None
-    error: ErrorResponse = None
-
-
-class GameTime(BaseModel):
-    min_time: GameTimeElapsed
-    avg_time: GameTimeElapsed
-    max_time: GameTimeElapsed
-    sum_time: GameTimeElapsed
-
-
-class GameTimeResponse(BaseModel):
-    data: GameTime = None
-    error: ErrorResponse = None
-
-
-class RankingDamage(BaseModel):
-    puuid: str
-    damage: int
-
-
-class RankingDamageResponse(BaseModel):
-    data: RankingDamage = None
+    data: List[GameDamage] = None
     error: ErrorResponse = None

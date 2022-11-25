@@ -1,0 +1,15 @@
+{
+  "data": {
+    "min": {
+      "id": 6,
+      "name": "",
+      "count": 1
+    },
+    "max": {
+      "id": 19,
+      "name": "TFT_Item_InfinityEdge",
+      "count": 11
+    }
+  },
+  "error": null
+}

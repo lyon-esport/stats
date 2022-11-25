@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 import pytest
 
 from les_stats.models.internal.auth import Scope
@@ -8,11 +10,24 @@ from tests.utils import CustomClient
 NAMESPACE = "/internal/stage"
 
 
+@pytest.mark.parametrize(
+    ("method", "endpoint", "json", "scopes"),
+    (
+        ("POST", "", {"name": "test"}, [Scope.write]),
+        ("GET", "", {}, [Scope.write, Scope.read]),
+        ("GET", "/test", {}, [Scope.write, Scope.read]),
+        ("DELETE", "/test", {}, [Scope.write]),
+    ),
+)
 @pytest.mark.asyncio
-async def test_post_stage_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "POST", f"{NAMESPACE}", [Scope.write], json={"name": "test"}
-    )
+async def test_scopes(
+    client: CustomClient,
+    method: str,
+    endpoint: str,
+    json: Dict[str, str],
+    scopes: Union[Scope.write, Scope.read],
+):
+    await client.test_api_scope(method, f"{NAMESPACE}{endpoint}", scopes, json=json)
 
 
 @pytest.mark.parametrize(
@@ -31,7 +46,7 @@ async def test_post_stage_scopes(client: CustomClient):
             {
                 "name": "Bracket",
             },
-            200,
+            201,
         ),
     ),
 )
@@ -48,11 +63,6 @@ async def test_post_stage(
     data = response.json()
     if http_code == 200:
         assert data["name"] == j_data["name"]
-
-
-@pytest.mark.asyncio
-async def test_get_stages_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -78,11 +88,6 @@ async def test_get_stages(client: CustomClient, id: int, name: str, http_code: i
     assert response.status_code == http_code
     data = response.json()
     assert data[id]["name"] == name
-
-
-@pytest.mark.asyncio
-async def test_get_stage_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}/test", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -116,11 +121,6 @@ async def test_get_stage(
         assert data["name"] == name
     elif http_code == 404:
         assert data["detail"] == message
-
-
-@pytest.mark.asyncio
-async def test_delete_stage_scopes(client: CustomClient):
-    await client.test_api_scope("DELETE", f"{NAMESPACE}/test", [Scope.write])
 
 
 @pytest.mark.parametrize(

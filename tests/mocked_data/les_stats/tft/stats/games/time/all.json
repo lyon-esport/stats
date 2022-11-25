@@ -1,0 +1,29 @@
+{
+  "data": {
+    "min_time": {
+      "second": 23,
+      "minute": 38,
+      "hour": 0,
+      "day": 0
+    },
+    "avg_time": {
+      "second": 24,
+      "minute": 38,
+      "hour": 0,
+      "day": 0
+    },
+    "max_time": {
+      "second": 24,
+      "minute": 38,
+      "hour": 0,
+      "day": 0
+    },
+    "sum_time": {
+      "second": 48,
+      "minute": 16,
+      "hour": 1,
+      "day": 0
+    }
+  },
+  "error": null
+}

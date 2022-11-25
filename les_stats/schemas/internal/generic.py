@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class GameTimeElapsed(BaseModel):
+class TimeElapsed(BaseModel):
     second: int
     minute: int
     hour: int

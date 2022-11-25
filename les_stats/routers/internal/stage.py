@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
-from tortoise.contrib.fastapi import HTTPNotFoundError
+from fastapi import APIRouter, HTTPException, Request, Response
 from tortoise.exceptions import DoesNotExist
 
 from les_stats.metrics.internal.metrics import metric_stage
@@ -14,12 +13,13 @@ from les_stats.utils.status import Status
 router = APIRouter()
 
 
-@router.post("", response_model=None)
+@router.post("", response_model=Stage_Pydantic)
 @scope_required([Scope.write])
-async def add_stage(request: Request, stage: Stage_Pydantic):
+async def add_stage(request: Request, response: Response, stage: Stage_Pydantic):
     if not await Stage.exists(name=stage.name):
         stage_obj = await Stage.create(**stage.dict(exclude_unset=True))
         metric_stage.inc()
+        response.status_code = 201
         return Stage_Pydantic.parse_obj(stage_obj)
     else:
         raise HTTPException(status_code=409, detail=f"Event {stage.name} already exist")
@@ -28,7 +28,6 @@ async def add_stage(request: Request, stage: Stage_Pydantic):
 @router.delete(
     "/{stage_name}",
     response_model=Status,
-    responses={404: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.write])
 async def delete_stage(request: Request, stage_name: str):
@@ -42,7 +41,6 @@ async def delete_stage(request: Request, stage_name: str):
 @router.get(
     "/{stage_name}",
     response_model=Stage_Pydantic,
-    responses={404: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.read, Scope.write])
 async def get_stage(request: Request, stage_name: str):

@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
-from tortoise.contrib.fastapi import HTTPNotFoundError
+from fastapi import APIRouter, HTTPException, Request, Response
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
@@ -22,10 +21,11 @@ router = APIRouter()
 @router.post(
     "",
     response_model=Tournament_Pydantic,
-    responses={409: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.write])
-async def add_tournament(request: Request, tournament: Tournament_Pydantic):
+async def add_tournament(
+    request: Request, response: Response, tournament: Tournament_Pydantic
+):
     async with in_transaction("default") as connection:
         if not await Tournament.exists(name=tournament.name):
             tournament_obj = Tournament(
@@ -44,13 +44,13 @@ async def add_tournament(request: Request, tournament: Tournament_Pydantic):
             )
     metric_tournament.inc()
     metric_stage.inc(await Stage.all().count())
+    response.status_code = 201
     return Tournament_Pydantic.parse_obj(tournament_obj)
 
 
 @router.delete(
     "/{tournament_name}",
     response_model=Status,
-    responses={404: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.write])
 async def delete_tournament(request: Request, tournament_name: str):
@@ -66,7 +66,6 @@ async def delete_tournament(request: Request, tournament_name: str):
 @router.put(
     "/{tournament_name}",
     response_model=Tournament_Pydantic,
-    responses={404: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.write])
 async def update_tournament(
@@ -95,7 +94,6 @@ async def update_tournament(
 @router.get(
     "/{tournament_name}",
     response_model=Tournament_Pydantic,
-    responses={404: {"model": HTTPNotFoundError}},
 )
 @scope_required([Scope.read, Scope.write])
 async def get_tournament(request: Request, tournament_name: str):

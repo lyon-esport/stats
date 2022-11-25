@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 import pytest
 
 from les_stats.models.internal.auth import Scope
@@ -11,11 +13,25 @@ from tests.utils import CustomClient
 NAMESPACE = "/internal/tournament"
 
 
+@pytest.mark.parametrize(
+    ("method", "endpoint", "json", "scopes"),
+    (
+        ("POST", "", {"name": "test"}, [Scope.write]),
+        ("GET", "", {}, [Scope.write, Scope.read]),
+        ("GET", "/test", {}, [Scope.write, Scope.read]),
+        ("DELETE", "/test", {}, [Scope.write]),
+        ("PUT", "/test", {}, [Scope.write]),
+    ),
+)
 @pytest.mark.asyncio
-async def test_post_tournament_scopes(client: CustomClient):
-    await client.test_api_scope(
-        "POST", f"{NAMESPACE}", [Scope.write], json={"name": "test"}
-    )
+async def test_scopes(
+    client: CustomClient,
+    method: str,
+    endpoint: str,
+    json: Dict[str, str],
+    scopes: Union[Scope.write, Scope.read],
+):
+    await client.test_api_scope(method, f"{NAMESPACE}{endpoint}", scopes, json=json)
 
 
 @pytest.mark.parametrize(
@@ -39,7 +55,7 @@ async def test_post_tournament_scopes(client: CustomClient):
             {
                 "name": "Pro",
             },
-            200,
+            201,
             False,
         ),
         (
@@ -49,7 +65,7 @@ async def test_post_tournament_scopes(client: CustomClient):
         ),
         (
             {"name": "Pro2", "stages": [{"name": "Bracket"}, {"name": "Bracket2"}]},
-            200,
+            201,
             False,
         ),
     ),
@@ -77,11 +93,6 @@ async def test_post_tournament(
         assert data["name"] == j_data["name"]
 
 
-@pytest.mark.asyncio
-async def test_get_tournaments_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}", [Scope.read, Scope.write])
-
-
 @pytest.mark.parametrize(
     (
         "id",
@@ -107,11 +118,6 @@ async def test_get_tournaments(
     assert response.status_code == http_code
     data = response.json()
     assert data[id]["name"] == name
-
-
-@pytest.mark.asyncio
-async def test_get_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("GET", f"{NAMESPACE}/test", [Scope.read, Scope.write])
 
 
 @pytest.mark.parametrize(
@@ -147,11 +153,6 @@ async def test_get_tournament(
         assert data["detail"] == message
 
 
-@pytest.mark.asyncio
-async def test_delete_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("DELETE", f"{NAMESPACE}/test", [Scope.write])
-
-
 @pytest.mark.parametrize(
     (
         "name",
@@ -183,11 +184,6 @@ async def test_delete_tournament(
         assert data["message"] == message
     elif http_code == 404:
         assert data["detail"] == message
-
-
-@pytest.mark.asyncio
-async def test_put_tournament_scopes(client: CustomClient):
-    await client.test_api_scope("PUT", f"{NAMESPACE}/test", [Scope.write], json={})
 
 
 @pytest.mark.parametrize(
