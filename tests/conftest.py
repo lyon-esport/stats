@@ -25,3 +25,8 @@ def runner() -> Generator:
     initializer(["les_stats.models"])
     yield CliRunner()
     finalizer()
+
+
+@pytest.fixture
+def non_mocked_hosts() -> list:
+    return ["testserver"]
