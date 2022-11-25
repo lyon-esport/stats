@@ -14,4 +14,4 @@ class Api(models.Model):
     scope: Scope = fields.CharEnumField(Scope, default=Scope.read)
 
     def __str__(self) -> str:
-        return f"name: {self.name}, scope: {self.scope}"
+        return f"name: {self.name}, scope: {self.scope.value}"
