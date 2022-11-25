@@ -273,7 +273,7 @@ class RiotAPI(ClientAPI):
             data.append(DataResponse(data=f"Game {match.id} saved"))
 
             metric_game.labels(
-                match.event, match.tournament, match.stage, self.game
+                match.event, match.tournament, match.stage, self.game.value
             ).inc()
         return http_code, data
 
@@ -348,9 +348,11 @@ class RiotAPI(ClientAPI):
             elif http_code != 200:
                 http_code = 207
             data.append(DataResponse(data=f"Game {match.id} updated"))
-            metric_game.labels(self.game, old_event, old_tournament, old_stage).dec()
             metric_game.labels(
-                self.game, match.event, match.tournament, match.stage
+                self.game.value, old_event, old_tournament, old_stage
+            ).dec()
+            metric_game.labels(
+                self.game.value, match.event, match.tournament, match.stage
             ).inc()
 
         return http_code, data
@@ -386,7 +388,9 @@ class RiotAPI(ClientAPI):
             elif http_code != 200:
                 http_code = 207
             data.append(DataResponse(data=f"Game {match_id} deleted"))
-            metric_game.labels(self.game, old_event, old_tournament, old_stage).dec()
+            metric_game.labels(
+                self.game.value, old_event, old_tournament, old_stage
+            ).dec()
 
         return http_code, data
 
@@ -397,17 +401,11 @@ class RiotAPI(ClientAPI):
         for encrypted_puuid in encrypted_puuids:
             match_list_url = ""
             if self.game == RiotGame.valorant:
-                match_list_url = (
-                    f"/{self.game}/summoner/v1/summoners/by-puuid/{encrypted_puuid}"
-                )
+                match_list_url = f"/{self.game.value}/summoner/v1/summoners/by-puuid/{encrypted_puuid}"
             elif self.game == RiotGame.lol:
-                match_list_url = (
-                    f"/{self.game}/summoner/v4/summoners/by-puuid/{encrypted_puuid}"
-                )
+                match_list_url = f"/{self.game.value}/summoner/v4/summoners/by-puuid/{encrypted_puuid}"
             elif self.game == RiotGame.tft:
-                match_list_url = (
-                    f"/{self.game}/summoner/v1/summoners/by-puuid/{encrypted_puuid}"
-                )
+                match_list_url = f"/{self.game.value}/summoner/v1/summoners/by-puuid/{encrypted_puuid}"
 
             reqs.append(
                 self.session.build_request(
@@ -429,15 +427,15 @@ class RiotAPI(ClientAPI):
             match_list_url = ""
             if self.game == RiotGame.valorant:
                 match_list_url = (
-                    f"/{self.game}/summoner/v1/summoners/by-name/{summoner_name}"
+                    f"/{self.game.value}/summoner/v1/summoners/by-name/{summoner_name}"
                 )
             elif self.game == RiotGame.lol:
                 match_list_url = (
-                    f"/{self.game}/summoner/v4/summoners/by-name/{summoner_name}"
+                    f"/{self.game.value}/summoner/v4/summoners/by-name/{summoner_name}"
                 )
             elif self.game == RiotGame.tft:
                 match_list_url = (
-                    f"/{self.game}/summoner/v1/summoners/by-name/{summoner_name}"
+                    f"/{self.game.value}/summoner/v1/summoners/by-name/{summoner_name}"
                 )
 
             reqs.append(
@@ -465,11 +463,17 @@ class RiotAPI(ClientAPI):
         for puuid in puuids:
             match_list_url = ""
             if self.game == RiotGame.valorant:
-                match_list_url = f"/{self.game}/match/v1/matchlists/by-puuid/{puuid}"
+                match_list_url = (
+                    f"/{self.game.value}/match/v1/matchlists/by-puuid/{puuid}"
+                )
             elif self.game == RiotGame.lol:
-                match_list_url = f"/{self.game}/match/v5/matches/by-puuid/{puuid}/ids"
+                match_list_url = (
+                    f"/{self.game.value}/match/v5/matches/by-puuid/{puuid}/ids"
+                )
             elif self.game == RiotGame.tft:
-                match_list_url = f"/{self.game}/match/v1/matches/by-puuid/{puuid}/ids"
+                match_list_url = (
+                    f"/{self.game.value}/match/v1/matches/by-puuid/{puuid}/ids"
+                )
 
             params = {
                 "start": start,
@@ -494,11 +498,11 @@ class RiotAPI(ClientAPI):
         self, matches_id: List[str]
     ) -> Tuple[int, List[DataResponse]]:
         if self.game == RiotGame.valorant:
-            match_url = f"/{self.game}/match/v1/matches"
+            match_url = f"/{self.game.value}/match/v1/matches"
         elif self.game == RiotGame.lol:
-            match_url = f"/{self.game}/match/v5/matches"
+            match_url = f"/{self.game.value}/match/v5/matches"
         else:
-            match_url = f"/{self.game}/match/v1/matches"
+            match_url = f"/{self.game.value}/match/v1/matches"
 
         reqs = []
         for match_id in matches_id:
@@ -519,9 +523,9 @@ class RiotAPI(ClientAPI):
         if self.game == RiotGame.valorant:
             raise NotImplementedError
         elif self.game == RiotGame.lol:
-            match_url = f"/{self.game}/league/v4/entries/by-summoner"
+            match_url = f"/{self.game.value}/league/v4/entries/by-summoner"
         else:
-            match_url = f"/{self.game}/league/v1/entries/by-summoner"
+            match_url = f"/{self.game.value}/league/v1/entries/by-summoner"
 
         reqs = []
         for summoner_id in summoners_id:
