@@ -44,6 +44,7 @@ class CustomClient(TestClient):
         assert r.status_code == 422
 
     async def test_api(self, method: str, url: str, scope: str, json: dict = None):
+        scope = scope.value
         api_key = ("a" * API_KEY_SIZE_MAX)[: -len(scope)] + scope
         await Api.get_or_create(
             name=f"TEST_SCOPE_{scope}", scope=scope, api_key=get_digest(api_key)

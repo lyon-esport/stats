@@ -66,7 +66,7 @@ async def tortoise_init_db(client: CustomClient, httpx_mock: HTTPXMock) -> None:
         await client.test_api(
             "POST",
             "/tft/game/matches/save",
-            Scope.write.value,
+            Scope.write,
             json=[j_data],
         )
 
@@ -88,7 +88,7 @@ async def tortoise_init_db(client: CustomClient, httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_scopes(client: CustomClient, endpoint: str):
     await client.test_api_scope(
-        "GET", f"{NAMESPACE}{endpoint}", [Scope.read.value, Scope.write.value]
+        "GET", f"{NAMESPACE}{endpoint}", [Scope.read, Scope.write]
     )
 
 
@@ -182,7 +182,7 @@ async def test_endpoints(
     for endpoint in ENDPOINTS:
         url = f"{NAMESPACE}{endpoint.format(match_id=match_id, player_id=player_id)}"
 
-        response = await client.test_api("GET", f"{url}{params}", Scope.read.value)
+        response = await client.test_api("GET", f"{url}{params}", Scope.read)
         expected_response = get_json_response(
             os.path.join(API_RESPONSE_DATA, endpoint, api_filename_response)
         )
