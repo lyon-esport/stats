@@ -39,33 +39,21 @@ def test_settings_exporter_port(value: str, error: bool):
     (
         ("aaa", None, True),
         ("", [], False),
-        ("https://sentry.com", None, True),
-        ("[https://sentry.com , sentry.com]", None, True),
+        (None, [], True),
+        ("https://example.com", ["https://example.com"], False),
+        ("https://example.com , example.com", None, True),
         (
-            "[https://sentry.com , https://sentry.com]",
-            ["https://sentry.com", "https://sentry.com"],
-            False,
-        ),
-        (
-            "[https://sentry.com, https://sentry.com]",
-            ["https://sentry.com", "https://sentry.com"],
-            False,
-        ),
-        (
-            "[https://sentry.com ,https://sentry.com]",
-            ["https://sentry.com", "https://sentry.com"],
-            False,
-        ),
-        (
-            "[https://sentry.com,https://sentry.com]",
-            ["https://sentry.com", "https://sentry.com"],
+            "https://example.com , https://example.com",
+            ["https://example.com", "https://example.com"],
             False,
         ),
     ),
 )
 def test_settings_cors_origins(value: str, expected_values: List[HttpUrl], error: bool):
+    print(value)
+    print(expected_values)
     if error:
-        with pytest.raises((ValueError, ValidationError)):
+        with pytest.raises(ValidationError):
             Settings(BACKEND_CORS_ORIGINS=value)
     else:
         s = Settings(BACKEND_CORS_ORIGINS=value)

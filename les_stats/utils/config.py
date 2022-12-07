@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     VALORANT_API_ROUTING: str = None
     TFT_API_KEY: str = None
     TFT_API_ROUTING: str = None
-    BACKEND_CORS_ORIGINS: List[HttpUrl] = ""
+    BACKEND_CORS_ORIGINS: List[HttpUrl] = []
     SENTRY_DSN: Optional[HttpUrl] = ""
 
     @validator("APP_PORT", "EXPORTER_PORT", pre=True, allow_reuse=True)
@@ -32,6 +32,10 @@ class Settings(BaseSettings):
             raise ValueError("Invalid timezone")
         return v
 
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: str) -> List[HttpUrl]:
+        return [] if len(v) == 0 else [i.strip() for i in v.split(",")]
+
     @validator("SENTRY_DSN", pre=True)
     def sentry_dsn_can_be_blank(cls, v: str) -> Optional[HttpUrl]:
         if len(v) == 0:
@@ -45,7 +49,9 @@ class Settings(BaseSettings):
         @classmethod
         def parse_env_var(cls, field_name: str, raw_val: str) -> Any:
             if field_name == "BACKEND_CORS_ORIGINS":
-                return raw_val.split(",")
+                return (
+                    [] if len(raw_val) == 0 else [x.strip() for x in raw_val.split(",")]
+                )
             return cls.json_loads(raw_val)
 
 
