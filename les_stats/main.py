@@ -47,7 +47,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("uvicorn")
 
     app = create_app()
-    app.mount("/static", StaticFiles(packages=['les_stats']), name="static")
+    app.mount("/static", StaticFiles(packages=["les_stats"]), name="static")
 
     app.add_middleware(
         CORSMiddleware,
