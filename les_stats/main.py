@@ -83,9 +83,7 @@ if __name__ == "__main__":
 
     @app.on_event("startup")
     async def startup_event():
-        logger.info(
-            f"App version {version}"
-        )
+        logger.info(f"App version {version}")
         await init_metrics()
         start_http_server(
             addr=get_settings().EXPORTER_ADDR, port=get_settings().EXPORTER_PORT
