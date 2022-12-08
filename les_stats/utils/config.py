@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import pytz
 from pydantic import BaseSettings, HttpUrl, validator
@@ -33,8 +33,11 @@ class Settings(BaseSettings):
         return v
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: str) -> List[HttpUrl]:
-        return [] if len(v) == 0 else [i.strip() for i in v.split(",")]
+    def assemble_cors_origins(cls, v: Union[List, str]) -> List[HttpUrl]:
+        if isinstance(v, list):
+            return v
+        else:
+            return [] if len(v) == 0 else [i.strip() for i in v.split(",")]
 
     @validator("SENTRY_DSN", pre=True)
     def sentry_dsn_can_be_blank(cls, v: str) -> Optional[HttpUrl]:
