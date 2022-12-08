@@ -23,7 +23,7 @@ version = importlib.metadata.version("les_stats")
 def create_app() -> FastAPI:
     application = FastAPI(
         title=title,
-        description="Statistics for games",
+        description="Statistics for games see https://github.com/lyon-esport/stats",
         version=version,
         contact={
             "name": "Lyon e-Sport",
