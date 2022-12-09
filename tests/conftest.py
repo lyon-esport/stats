@@ -1,23 +1,28 @@
 from typing import Generator
 
 import pytest
+from asgi_lifespan import LifespanManager
 from asyncclick.testing import CliRunner
-from tortoise import current_transaction_map
 from tortoise.contrib.test import finalizer, initializer
 
 from les_stats.main import create_app
+from les_stats.utils.db import init_db
 from tests.utils import CustomClient
 
 app = create_app()
 
 
+@pytest.fixture(scope="module")
+def anyio_backend():
+    return "asyncio"
+
+
 @pytest.fixture()
-def client() -> Generator:
-    initializer(["les_stats.models"])
-    current_transaction_map["default"] = current_transaction_map["models"]
-    with CustomClient(app) as c:
-        yield c
-    finalizer()
+async def client() -> Generator:
+    await init_db()
+    async with LifespanManager(app):
+        async with CustomClient(app=app, base_url="http://testserver") as c:
+            yield c
 
 
 @pytest.fixture()

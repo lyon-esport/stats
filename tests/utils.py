@@ -3,13 +3,13 @@ import os
 import re
 from typing import Any, Dict, List
 
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 from les_stats.models.internal.auth import Api, Scope
 from les_stats.utils.auth import API_KEY_SIZE_MAX, get_digest
 
 
-class CustomClient(TestClient):
+class CustomClient(AsyncClient):
     async def test_api_scope(
         self, method: str, url: str, allowed_scopes: List[Scope], json: dict = None
     ):
@@ -23,7 +23,9 @@ class CustomClient(TestClient):
                 scope=allowed_scope,
                 api_key=get_digest(api_key),
             )
-            r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
+            r = await self.request(
+                method, url, headers={"x-api-key": api_key}, json=json
+            )
             assert r.status_code != 403
 
         for not_allowed_scope in list(
@@ -37,10 +39,12 @@ class CustomClient(TestClient):
                 scope=not_allowed_scope,
                 api_key=get_digest(api_key),
             )
-            r = self.request(method, url, headers={"x-api-key": api_key}, json=json)
+            r = await self.request(
+                method, url, headers={"x-api-key": api_key}, json=json
+            )
             assert r.status_code == 403
 
-        r = self.request(method, url, json=json)
+        r = await self.request(method, url, json=json)
         assert r.status_code == 422
 
     async def test_api(self, method: str, url: str, scope: str, json: dict = None):
@@ -49,7 +53,9 @@ class CustomClient(TestClient):
         await Api.get_or_create(
             name=f"TEST_SCOPE_{scope}", scope=scope, api_key=get_digest(api_key)
         )
-        return self.request(method, url, headers={"x-api-key": api_key}, json=json)
+        return await self.request(
+            method, url, headers={"x-api-key": api_key}, json=json
+        )
 
 
 def get_json_response(filename: str) -> Dict[Any, Any]:

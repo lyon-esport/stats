@@ -1,9 +1,11 @@
 from tortoise import Tortoise
 
+from les_stats.utils.config import get_settings
 
-async def init_db(db_url: str) -> None:
+
+async def init_db() -> None:
     await Tortoise.init(
-        db_url=db_url,
+        db_url=get_settings().DB_URL,
         modules={"models": ["les_stats.models"]},
     )
     await Tortoise.generate_schemas()
