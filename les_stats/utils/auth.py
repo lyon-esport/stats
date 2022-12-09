@@ -51,7 +51,7 @@ async def verify_api_key(x_api_key: str = Header()):
 
 @click.group()
 async def auth() -> None:
-    await init_db(get_settings().DB_URL)
+    await init_db()
 
 
 @auth.result_callback()

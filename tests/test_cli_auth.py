@@ -10,6 +10,7 @@ from les_stats.utils.auth import (
     delete_api_key,
     list_api_key,
 )
+from tests.utils import CustomClient
 
 
 @pytest.mark.parametrize(
@@ -40,7 +41,7 @@ from les_stats.utils.auth import (
 )
 @pytest.mark.asyncio
 async def test_create_api_key(
-    runner: CliRunner, name: str, scope: str, rc: int, message
+    runner: CliRunner, client: CustomClient, name: str, scope: str, rc: int, message
 ):
     if name is None:
         params = []
@@ -80,7 +81,9 @@ async def test_create_api_key(
     ),
 )
 @pytest.mark.asyncio
-async def test_delete_api_key(runner: CliRunner, name: str, rc: int, message: str):
+async def test_delete_api_key(
+    runner: CliRunner, client: CustomClient, name: str, rc: int, message: str
+):
     await runner.invoke(create_api_key, ["test"])
     if name is None:
         params = []
@@ -104,7 +107,9 @@ async def test_delete_api_key(runner: CliRunner, name: str, rc: int, message: st
     ),
 )
 @pytest.mark.asyncio
-async def test_list_api_key(runner: CliRunner, api_keys: List[List[str]]):
+async def test_list_api_key(
+    runner: CliRunner, client: CustomClient, api_keys: List[List[str]]
+):
     output = ""
     for api_key in api_keys:
         await runner.invoke(create_api_key, [api_key])
