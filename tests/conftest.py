@@ -6,7 +6,7 @@ from asyncclick.testing import CliRunner
 from tortoise.contrib.test import finalizer, initializer
 
 from les_stats.main import create_app
-from les_stats.utils.db import init_db
+from les_stats.utils.db import close_db, init_db
 from tests.utils import CustomClient
 
 app = create_app()
@@ -23,6 +23,7 @@ async def client() -> Generator:
     async with LifespanManager(app):
         async with CustomClient(app=app, base_url="http://testserver") as c:
             yield c
+    await close_db()
 
 
 @pytest.fixture()
