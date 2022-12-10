@@ -118,7 +118,10 @@ class RiotAPI(ClientAPI):
         raise NotImplementedError
 
     async def save_tft_games(
-        self, matches: List[GameSaveIn_Pydantic]
+        self,
+        matches: List[GameSaveIn_Pydantic],
+        min_player: int = 0,
+        players: List[str] = [],
     ) -> List[DataResponse]:
         http_code = None
         data = []
@@ -170,6 +173,25 @@ class RiotAPI(ClientAPI):
                     http_code = 207
                 data.append(req)
                 continue
+
+            if len(players) > 0:
+                nb_players_matched = (
+                    sum(
+                        participant in players
+                        for participant in g["metadata"]["participants"]
+                    )
+                    - 1
+                )
+                if min_player > nb_players_matched:
+                    data.append(
+                        DataResponse(
+                            error=ErrorResponse(
+                                status_code=-1,
+                                message=f"Only {nb_players_matched} players matched, needed {min_player}",
+                            )
+                        )
+                    )
+                    continue
 
             async with in_transaction("default") as connection:
                 metadata = g["metadata"]
@@ -275,6 +297,7 @@ class RiotAPI(ClientAPI):
             metric_game.labels(
                 match.event, match.tournament, match.stage, self.game.value
             ).inc()
+
         return http_code, data
 
     async def update_tft_games(
