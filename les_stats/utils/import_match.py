@@ -6,6 +6,9 @@ import httpx
 
 from les_stats.client_api.riot import GameSaveIn_Pydantic, RiotAPI, RiotGame
 from les_stats.models.internal.auth import Scope
+from les_stats.models.internal.event import Event
+from les_stats.models.internal.stage import Stage
+from les_stats.models.internal.tournament import Tournament
 from les_stats.utils.auth import is_api_key_scope_valid
 from les_stats.utils.config import get_settings
 from les_stats.utils.db import close_db, init_db
@@ -99,6 +102,13 @@ async def import_matches_tft(
 ) -> None:
     if not await is_api_key_scope_valid(api_key, [Scope.write]):
         raise click.BadParameter("Invalid API Key")
+
+    if event and await Event.filter(name=event).count() != 1:
+        raise click.ClickException(f"Event {event} does not exist")
+    if tournament and await Tournament.filter(name=tournament).count() != 1:
+        raise click.ClickException(f"Tournament {tournament} does not exist")
+    if stage and await Stage.filter(name=stage).count() != 1:
+        raise click.ClickException(f"Stage {stage} does not exist")
 
     players = []
     if puuids_http_json:

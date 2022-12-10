@@ -8,6 +8,9 @@ from pytest_httpx import HTTPXMock
 
 from les_stats.client_api.riot import RiotAPI
 from les_stats.models.internal.auth import Api, Scope
+from les_stats.models.internal.event import Event
+from les_stats.models.internal.stage import Stage
+from les_stats.models.internal.tournament import Tournament
 from les_stats.utils.auth import API_KEY_SIZE_MAX, get_digest
 from les_stats.utils.config import get_settings
 from les_stats.utils.import_match import import_matches_tft
@@ -198,6 +201,74 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             },
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
             {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            {"value": "event", "option": "event", "create": False},
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            {"test": False, "http_code": 200},
+            1,
+            "Error: Event event does not exist\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            {"value": "event", "option": "event", "create": True},
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            {"value": "tournament", "option": "tournament", "create": True},
+            None,
+            None,
+            None,
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            None,
+            {"value": "stage", "option": "stage", "create": True},
+            None,
+            None,
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
             None,
             None,
             None,
@@ -232,6 +303,14 @@ async def test_import_matches_tft(
     message,
 ):
     cli_params = []
+
+    if event is not None and event["create"]:
+        await Event.create(name=event["value"])
+    if tournament is not None and tournament["create"]:
+        await Tournament.create(name=tournament["value"])
+    if stage is not None and stage["create"]:
+        await Stage.create(name=stage["value"])
+
     for p in [
         puuid,
         api_key,
