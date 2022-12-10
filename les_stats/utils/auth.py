@@ -89,7 +89,7 @@ async def create_api_key(name: str, scope: str) -> None:
     )
     await Api.create(name=name, api_key=get_digest(api_key), scope=scope)
 
-    click.echo(api_key)
+    click.secho(api_key, fg="green")
 
 
 @click.command()
@@ -97,10 +97,10 @@ async def list_api_key() -> None:
     apis_obj = await Api.all()
 
     if len(apis_obj) == 0:
-        click.echo("No API Key exist")
+        click.secho("No API Key exist", fg="yellow")
     else:
         for api_obj in apis_obj:
-            click.echo(api_obj)
+            click.secho(api_obj, fg="green")
 
 
 @click.command()
@@ -113,7 +113,7 @@ async def delete_api_key(name: str) -> None:
     if not deleted_count:
         raise click.BadParameter("NAME not found")
     else:
-        click.echo("API key deleted")
+        click.secho("API key deleted", fg="green")
 
 
 auth.add_command(create_api_key)
