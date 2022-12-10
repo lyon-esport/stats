@@ -28,7 +28,7 @@ def validate_url(
 
 @click.group()
 async def cli() -> None:
-    await init_db(get_settings().DB_URL)
+    await init_db()
 
 
 @cli.result_callback()
@@ -111,6 +111,7 @@ async def import_matches_tft(
         raise click.ClickException(f"Stage {stage} does not exist")
 
     players = []
+
     if puuids_http_json:
         r = httpx.get(
             puuids_http_json,

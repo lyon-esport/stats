@@ -38,6 +38,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
         "tournament",
         "stage",
         "puuids_http_json",
+        "mock_puuids_http_json",
         "min_player",
         "count_game",
         "end_time",
@@ -47,6 +48,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
     ),
     (
         (
+            None,
             None,
             None,
             None,
@@ -72,6 +74,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": False},
             2,
             "Error: Missing argument 'PUUID'.",
@@ -80,6 +83,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             {
                 "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
             },
+            None,
             None,
             None,
             None,
@@ -106,6 +110,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": False},
             2,
             "Usage: import-matches-tft [OPTIONS] PUUID\nTry 'import-matches-tft --help' for help.\n\nError: Missing option '--start-time'.\n",
@@ -115,6 +120,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
                 "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
             },
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            None,
             None,
             None,
             None,
@@ -140,6 +146,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": False},
             2,
             "Usage: import-matches-tft [OPTIONS] PUUID\nTry 'import-matches-tft --help' for help.\n\nError: Missing option '--api-key'.\n",
@@ -150,6 +157,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             },
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
             {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
             None,
             None,
             None,
@@ -174,6 +182,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": False},
             2,
             "Invalid value: Invalid API Key\n",
@@ -184,6 +193,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             },
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
             {"value": "r" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
             None,
             None,
             None,
@@ -208,6 +218,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": False, "http_code": 200},
             1,
             "Error: Event event does not exist\n",
@@ -219,6 +230,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
             {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
             {"value": "event", "option": "event", "create": True},
+            None,
             None,
             None,
             None,
@@ -242,6 +254,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": True, "http_code": 200},
             0,
             "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
@@ -259,6 +272,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             None,
             None,
+            None,
             {"test": True, "http_code": 200},
             0,
             "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
@@ -269,6 +283,127 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             },
             {"value": "2022-11-15 09:17:00", "option": "start-time"},
             {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            None,
+            None,
+            {"value": "https://lyon-esport.fr/players", "option": "puuids-http-json"},
+            {"test": True, "http_code": 404, "data": "Not found"},
+            {"value": "0", "option": "min-player"},
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            None,
+            None,
+            {"value": "https://lyon-esport.fr/players", "option": "puuids-http-json"},
+            {
+                "test": True,
+                "http_code": 200,
+                "data": {
+                    "players": [
+                        {
+                            "puuid": "QdbpJd30q6pIoMm5MlCkFaIxHQeKR5nhN2lcqKbSfxBefQkkXLjtr6OJ45HeP4xFFJpR9vdTxyoX3g"
+                        },
+                        {
+                            "puuid": "T5P9Mfjm288Pqxl5lCDoScEx23X1-D_0ycTyynssETkIGcIAxuVvwrYdk9RA3QPQkiGbtuh43a8U9w"
+                        },
+                        {
+                            "puuid": "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw"
+                        },
+                    ]
+                },
+            },
+            {"value": "6", "option": "min-player"},
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            None,
+            None,
+            {"value": "https://lyon-esport.fr/players", "option": "puuids-http-json"},
+            {
+                "test": True,
+                "http_code": 200,
+                "data": {
+                    "players": [
+                        {
+                            "puuid": "QdbpJd30q6pIoMm5MlCkFaIxHQeKR5nhN2lcqKbSfxBefQkkXLjtr6OJ45HeP4xFFJpR9vdTxyoX3g"
+                        },
+                        {
+                            "puuid": "T5P9Mfjm288Pqxl5lCDoScEx23X1-D_0ycTyynssETkIGcIAxuVvwrYdk9RA3QPQkiGbtuh43a8U9w"
+                        },
+                        {
+                            "puuid": "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw"
+                        },
+                    ]
+                },
+            },
+            {"value": "3", "option": "min-player"},
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
+            None,
+            None,
+            {"value": "https://lyon-esport.fr/players", "option": "puuids-http-json"},
+            {
+                "test": True,
+                "http_code": 200,
+                "data": {
+                    "players": [
+                        {
+                            "puuid": "QdbpJd30q6pIoMm5MlCkFaIxHQeKR5nhN2lcqKbSfxBefQkkXLjtr6OJ45HeP4xFFJpR9vdTxyoX3g"
+                        },
+                        {
+                            "puuid": "T5P9Mfjm288Pqxl5lCDoScEx23X1-D_0ycTyynssETkIGcIAxuVvwrYdk9RA3QPQkiGbtuh43a8U9w"
+                        },
+                        {
+                            "puuid": "AJ1iPPJY2wyNq3Ke4-COeaWq55Oq-QFM2DEQEDJ-LZ0_vnltbmLTT5UEA8pv5kd7Mh_M5GLJpcj8Rw"
+                        },
+                    ]
+                },
+            },
+            {"value": "0", "option": "min-player"},
+            None,
+            None,
+            {"test": True, "http_code": 200},
+            0,
+            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+        ),
+        (
+            {
+                "value": "ds8RFUB2gv7up-qeVc8xTS5jRitXQlVaE0y8038tirRJmtPlIw83dF_hds_UV4yGkxfxBDl551vi0Qa"
+            },
+            {"value": "2022-11-15 09:17:00", "option": "start-time"},
+            {"value": "w" * API_KEY_SIZE_MAX, "option": "api-key"},
+            None,
             None,
             None,
             None,
@@ -288,16 +423,17 @@ async def test_import_matches_tft(
     client: CustomClient,
     httpx_mock: HTTPXMock,
     tortoise_init_db: None,
-    puuid: str,
-    start_time: str,
-    api_key: str,
-    event: str,
-    tournament: str,
-    stage: str,
+    puuid: Dict,
+    start_time: Dict,
+    api_key: Dict,
+    event: Dict,
+    tournament: Dict,
+    stage: Dict,
     puuids_http_json: Dict,
-    min_player: str,
-    count_game: str,
-    end_time: str,
+    mock_puuids_http_json: Dict,
+    min_player: Dict,
+    count_game: Dict,
+    end_time: Dict,
     mock_puuid: Dict,
     rc: int,
     message,
@@ -327,6 +463,14 @@ async def test_import_matches_tft(
             if "option" in p:
                 cli_params.append(f"--{p['option']}")
             cli_params.append(p["value"])
+
+    if mock_puuids_http_json is not None and mock_puuids_http_json["test"]:
+        httpx_mock.add_response(
+            method="GET",
+            url=puuids_http_json,
+            status_code=mock_puuids_http_json["http_code"],
+            json=mock_puuids_http_json["data"],
+        )
 
     if mock_puuid["test"]:
         params = "?start=0"
@@ -362,6 +506,7 @@ async def test_import_matches_tft(
                 )
 
     result = await runner.invoke(import_matches_tft, cli_params)
+
     assert result.exit_code == rc
     if rc != 0:
         assert result.exception
