@@ -175,19 +175,20 @@ class RiotAPI(ClientAPI):
                 continue
 
             if len(players) > 0:
-                nb_players_matched = (
-                    sum(
-                        participant in players
-                        for participant in g["metadata"]["participants"]
-                    )
-                    - 1
+                nb_players_matched = sum(
+                    participant in players
+                    for participant in g["metadata"]["participants"]
                 )
                 if min_player > nb_players_matched:
+                    if http_code is None:
+                        http_code = 200
+                    elif http_code != req_http_code:
+                        http_code = 207
                     data.append(
                         DataResponse(
                             error=ErrorResponse(
-                                status_code=-1,
-                                message=f"Only {nb_players_matched} players matched, needed {min_player}",
+                                status_code=200,
+                                message=f"{nb_players_matched} players matched, needed {min_player}",
                             )
                         )
                     )

@@ -60,9 +60,9 @@ async def process_result(result, **kwargs):
 )
 @click.option(
     "--min-player",
-    type=click.IntRange(min=0, max=7),
-    default=0,
-    help="Minimum number of other player that must be in game",
+    type=click.IntRange(min=1, max=8),
+    default=1,
+    help="Minimum number of players that must be in game",
 )
 @click.option(
     "--count-game",
@@ -113,12 +113,9 @@ async def import_matches_tft(
     players = []
 
     if puuids_http_json:
-        r = httpx.get(
-            puuids_http_json,
-            headers={"accept": "application/json"},
-        )
+        r = httpx.get(puuids_http_json, headers={"accept": "application/json"})
         if not httpx.codes.is_success(r.status_code):
-            raise click.ClickException(f"{r.status_code}: {r.text}")
+            raise click.ClickException(f"puuids-http-json {r.status_code}: {r.text}")
 
         players = [player["puuid"] for player in r.json()["players"]]
 

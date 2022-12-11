@@ -288,12 +288,12 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
             None,
             {"value": "https://lyon-esport.fr/players", "option": "puuids-http-json"},
             {"test": True, "http_code": 404, "data": "Not found"},
-            {"value": "0", "option": "min-player"},
+            {"value": "1", "option": "min-player"},
             None,
             None,
-            {"test": True, "http_code": 200},
-            0,
-            "Game EUW1_5781372307 saved\nGame EUW1_5979031153 saved\n",
+            {"test": False, "http_code": 200},
+            1,
+            'Error: puuids-http-json 404: "Not found"',
         ),
         (
             {
@@ -390,7 +390,7 @@ async def tortoise_init_db(runner: CliRunner, client: CustomClient) -> None:
                     ]
                 },
             },
-            {"value": "0", "option": "min-player"},
+            {"value": "1", "option": "min-player"},
             None,
             None,
             {"test": True, "http_code": 200},
@@ -467,7 +467,7 @@ async def test_import_matches_tft(
     if mock_puuids_http_json["test"]:
         httpx_mock.add_response(
             method="GET",
-            url=puuids_http_json,
+            url=puuids_http_json["value"],
             status_code=mock_puuids_http_json["http_code"],
             json=mock_puuids_http_json["data"],
         )
@@ -504,7 +504,6 @@ async def test_import_matches_tft(
                         os.path.join(MOCKED_DATA_FOLDER, "match", match_id + ".json")
                     ),
                 )
-
     result = await runner.invoke(import_matches_tft, cli_params)
 
     assert result.exit_code == rc
