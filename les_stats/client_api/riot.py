@@ -10,6 +10,7 @@ from les_stats.metrics.internal.metrics import metric_game
 from les_stats.models.internal.event import Event
 from les_stats.models.internal.stage import Stage
 from les_stats.models.internal.tournament import Tournament
+from les_stats.models.lol.game import LolGame
 from les_stats.models.tft.game import (
     TFTAugment,
     TFTCompanion,
@@ -112,10 +113,10 @@ class RiotAPI(ClientAPI):
     async def update_lol_games(
         self, matches: List[GameSaveIn_Pydantic]
     ) -> List[DataResponse]:
-        raise NotImplementedError
+        return await self._update_games(matches, LolGame)
 
     async def delete_lol_games(self, matches_id: List[str]) -> List[DataResponse]:
-        raise NotImplementedError
+        return await self._delete_games(matches_id, LolGame)
 
     async def save_tft_games(
         self,
