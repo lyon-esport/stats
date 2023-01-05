@@ -67,6 +67,11 @@ Manage API Key
 python3 -m les_stats.utils.auth --help
 ```
 
+Import matches
+```
+python3 -m les_stats.utils.import_match --help
+```
+
 # API
 APIs documentation are available at http://<LES_STATS_APP_HOST>:<LES_STATS_APP_PORT>/docs
 
