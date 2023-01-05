@@ -6,6 +6,7 @@ from typing import List
 
 import asyncclick as click
 from fastapi import Header, HTTPException
+from tortoise.exceptions import DoesNotExist
 
 from les_stats.models.internal.auth import Api, Scope
 from les_stats.utils.config import get_settings
@@ -22,15 +23,21 @@ def get_digest(x_api_key: str) -> str:
     return digest.hex()
 
 
-def scope_required(scopes: List[str]):
+async def is_api_key_scope_valid(api_key: str, scopes: List[Scope]) -> bool:
+    try:
+        api_obj = await Api.get(api_key=get_digest(api_key))
+    except DoesNotExist:
+        return False
+    return api_obj.scope in scopes
+
+
+def scope_required(scopes: List[Scope]):
     def wrapper(func):
         @wraps(func)
         async def wrap(request, *args, **kwargs):
-            api_obj = await Api.get(
-                api_key=get_digest(request.headers.get("x-api-key"))
-            )
-
-            if api_obj.scope not in scopes:
+            if not await is_api_key_scope_valid(
+                request.headers.get("x-api-key"), scopes
+            ):
                 raise HTTPException(status_code=403, detail="X-Api-Key header invalid")
 
             return await func(request, *args, **kwargs)
@@ -82,7 +89,7 @@ async def create_api_key(name: str, scope: str) -> None:
     )
     await Api.create(name=name, api_key=get_digest(api_key), scope=scope)
 
-    click.echo(api_key)
+    click.secho(api_key, fg="green")
 
 
 @click.command()
@@ -90,10 +97,10 @@ async def list_api_key() -> None:
     apis_obj = await Api.all()
 
     if len(apis_obj) == 0:
-        click.echo("No API Key exist")
+        click.secho("No API Key exist", fg="yellow")
     else:
         for api_obj in apis_obj:
-            click.echo(api_obj)
+            click.secho(api_obj, fg="green")
 
 
 @click.command()
@@ -106,7 +113,7 @@ async def delete_api_key(name: str) -> None:
     if not deleted_count:
         raise click.BadParameter("NAME not found")
     else:
-        click.echo("API key deleted")
+        click.secho("API key deleted", fg="green")
 
 
 auth.add_command(create_api_key)
