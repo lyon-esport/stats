@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     VALORANT_API_ROUTING: str = None
     TFT_API_KEY: str = None
     TFT_API_ROUTING: str = None
+    LOL_API_KEY: str = None
+    LOL_API_ROUTING: str = None
     BACKEND_CORS_ORIGINS: List[HttpUrl] = []
     SENTRY_DSN: Optional[HttpUrl] = ""
 

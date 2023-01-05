@@ -1,4 +1,4 @@
-Statistics for various games
+Statistics for various games (save game in system and filter statistics based on Event, Tournament or Stage)
 
 [![PyPI](https://img.shields.io/pypi/v/les-stats.svg)](https://pypi.python.org/pypi/les-stats)
 [![PyPI versions](https://img.shields.io/pypi/pyversions/les-stats.svg)](https://pypi.python.org/pypi/les-stats)
@@ -7,7 +7,8 @@ Statistics for various games
 
 # Games supported
 - TFT
-- Valorant
+- Valorant (work in progress)
+- LoL (work in progress)
 
 # Install
 ```bash
@@ -43,9 +44,11 @@ LES_STATS_SALT="Salt used to hash API key of internal app"
 
 Optional:
 LES_STATS_TFT_API_KEY="tft api key"
-LES_STATS_TFT_API_ROUTING="lol api routing"
+LES_STATS_TFT_API_ROUTING="tft api routing"
 LES_STATS_VALORANT_API_KEY="valorant api key"
-LES_STATS_VALORANT_API_ROUTING="lol api routing"
+LES_STATS_VALORANT_API_ROUTING="valorant api routing"
+LES_STATS_LOL_API_KEY="lol api key"
+LES_STATS_LOL_API_ROUTING="lol api routing"
 LES_STATS_APP_HOST="Application bind sotcket to this host (default localhost)"
 LES_STATS_APP_PORT="Application bind sotcket with this port (default 8000)"
 LES_STATS_EXPORTER_ADDR="Exporter bind sotcket to this host (default localhost)"
@@ -65,10 +68,10 @@ python3 -m les_stats.utils.auth --help
 ```
 
 # API
-APIs documentation are available at http://localhost:8000/docs
+APIs documentation are available at http://<LES_STATS_APP_HOST>:<LES_STATS_APP_PORT>/docs
 
 # Prometheus
-Stats are available at http://localhost:9345/metrics
+Stats are available at http://<LES_STATS_EXPORTER_ADDR>:<LES_STATS_EXPORTER_PORT>/metrics (work in progess)
 
 # Licence
 
