@@ -97,7 +97,6 @@ async def get_tier_list_composition(
                     },
                 }
             else:
-
                 if (
                     tiers[f"tier{trait['current_trait__tier_current']}"]["min"]["count"]
                     > trait["count_tier_list_trait"]
